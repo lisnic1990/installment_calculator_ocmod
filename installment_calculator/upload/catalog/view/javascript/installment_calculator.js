@@ -1,9 +1,9 @@
 $(document).ready(function() {
     const $calculator = $('.installment-calculator');
-    const priceText = $('#product .price .price-new, #product .price').first().text();
+    const priceText = $('.product-info .price').text();
     const price = parseFloat(priceText.replace(/[^\d.]/g, ''));
     const productName = $('h1').text().trim();
-    const productImage = $('#product .thumbnail img').first().attr('src');
+    const productImage = $('.product-thumb img').first().attr('src');
     const productUrl = window.location.href;
     
     let currentMonths = 12;
