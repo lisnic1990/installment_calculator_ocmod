@@ -2,48 +2,64 @@
 <div id="content">
     <div class="page-header">
         <div class="container-fluid">
+            <div class="pull-right">
+                <button type="submit" form="form-installment" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+                <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+            </div>
             <h1>{{ heading_title }}</h1>
             <ul class="breadcrumb">
-                <li><a href="{{ home }}">Home</a></li>
-                <li><a href="{{ extension }}">Extensions</a></li>
+                <li><a href="{{ home }}">{{ text_home }}</a></li>
+                <li><a href="{{ extension }}">{{ text_extension }}</a></li>
                 <li><a href="{{ cancel }}">{{ heading_title }}</a></li>
             </ul>
         </div>
     </div>
     <div class="container-fluid">
+        {% if error_warning %}
+        <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+        {% endif %}
+        {% if success %}
+        <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+        {% endif %}
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
             </div>
             <div class="panel-body">
-                <form action="{{ action }}" method="post" enctype="multipart/form-data" class="form-horizontal">
+                <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-installment" class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">{{ entry_status }}</label>
+                        <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
                         <div class="col-sm-10">
-                            <select name="module_installment_calculator_status" class="form-control">
-                                <option value="1"{% if module_installment_calculator_status %} selected{% endif %}>{{ text_enabled }}</option>
-                                <option value="0"{% if not module_installment_calculator_status %} selected{% endif %}>{{ text_disabled }}</option>
+                            <select name="module_installment_calculator_status" id="input-status" class="form-control">
+                                {% if module_installment_calculator_status %}
+                                <option value="1" selected="selected">{{ text_enabled }}</option>
+                                <option value="0">{{ text_disabled }}</option>
+                                {% else %}
+                                <option value="1">{{ text_enabled }}</option>
+                                <option value="0" selected="selected">{{ text_disabled }}</option>
+                                {% endif %}
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">{{ entry_months }}</label>
+                        <label class="col-sm-2 control-label" for="input-months"><span data-toggle="tooltip" title="{{ help_months }}">{{ entry_months }}</span></label>
                         <div class="col-sm-10">
-                            <input type="text" name="module_installment_calculator_months" value="{{ module_installment_calculator_months }}" placeholder="4,6,10,12" class="form-control" />
-                            <span class="help-block">Через запятую: 4,6,10,12</span>
+                            <input type="text" name="module_installment_calculator_months" value="{{ module_installment_calculator_months }}" placeholder="4,6,10,12" id="input-months" class="form-control" />
+                            <span class="help-block">{{ help_months }}</span>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">{{ entry_email }}</label>
+                        <label class="col-sm-2 control-label" for="input-email">{{ entry_email }}</label>
                         <div class="col-sm-10">
-                            <input type="text" name="module_installment_calculator_email" value="{{ module_installment_calculator_email }}" class="form-control" />
+                            <input type="email" name="module_installment_calculator_email" value="{{ module_installment_calculator_email }}" placeholder="{{ config_email }}" id="input-email" class="form-control" />
+                            <span class="help-block">{{ help_email }}</span>
                         </div>
                     </div>
                 </form>
-            </div>
-            <div class="panel-footer text-right">
-                <button type="submit" form="form-installment" class="btn btn-primary">{{ button_save }}</button>
-                <a href="{{ cancel }}" class="btn btn-default">{{ button_cancel }}</a>
             </div>
         </div>
     </div>
