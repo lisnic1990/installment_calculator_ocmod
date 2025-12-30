@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.0.3</version>
+    <version>1.0.0.4</version>
     <author>Custom</author>
     
     <!-- Инъекция в контроллер продукта -->
@@ -10,7 +10,7 @@
         <operation>
             <search><![CDATA[$data['column_left'] = $this->load->controller('common/column_left');]]></search>
             <add position="after"><![CDATA[
-        // Installment Calculator
+        // Installment Calculator Module
         $this->load->model('setting/setting');
         $installment_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
         if (!empty($installment_settings['module_installment_calculator_status'])) {
@@ -24,13 +24,22 @@
         </operation>
     </file>
     
-    <!-- Инъекция в шаблон продукта -->
+    <!-- Инъекция в шаблон продукта - после кнопки купить -->
     <file path="catalog/view/theme/*/template/product/product.twig">
         <operation>
-            <search><![CDATA[<div id="product">]]></search>
-            <add position="after"><![CDATA[
+            <search><![CDATA[<button type="button" id="button-cart"]]></search>
+            <add position="before"><![CDATA[
+{% if installment_calculator %}
 {{ installment_calculator }}
+{% endif %}
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[{{ footer }}]]></search>
+            <add position="before"><![CDATA[
+{% if installment_popup %}
 {{ installment_popup }}
+{% endif %}
             ]]></add>
         </operation>
     </file>

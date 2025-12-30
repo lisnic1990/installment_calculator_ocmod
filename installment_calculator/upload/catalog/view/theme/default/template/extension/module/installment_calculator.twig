@@ -1,25 +1,48 @@
-<div class="installment-calculator" style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+<div class="installment-calculator" style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 20px 0;" data-months='{{ months|json_encode|raw }}'>
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
         <svg width="40" height="40" viewBox="0 0 40 40" style="color: #e91e63;">
             <path fill="currentColor" d="M20 8c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10z"/>
         </svg>
         <div>
             <div style="font-size: 32px; font-weight: 700;">
-                <span class="installment-price">{{ price|replace({' лей': ''}) }}</span> лей
+                <span class="installment-price">{{ price|replace({' лей': '', ' ': ''}) }}</span> лей
             </div>
             <div style="background: #e91e63; color: white; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 14px; margin-top: 5px;">
-                Рассрочка <span class="installment-period">12</span>м.
+                Рассрочка <span class="installment-period">{{ default_month }}</span>м.
             </div>
         </div>
     </div>
     
+    <!-- Селектор периодов -->
+    <div class="installment-period-selector" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        {% for month in months %}
+        <button type="button" class="installment-period-btn" data-months="{{ month }}" style="
+            padding: 10px 20px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            {% if month == default_month %}
+            background: #5c6bc0;
+            color: white;
+            border-color: #5c6bc0;
+            {% endif %}
+        " onmouseover="if(!this.classList.contains('active')) { this.style.borderColor='#5c6bc0'; this.style.color='#5c6bc0'; }" onmouseout="if(!this.classList.contains('active')) { this.style.borderColor='#e5e5e5'; this.style.color='#333'; }">
+            {{ month }} мес.
+        </button>
+        {% endfor %}
+    </div>
+    
     <div style="font-size: 18px; color: #e91e63; margin-bottom: 20px;">
-        <span class="installment-total">{{ price|replace({' лей': ''}) }}</span> лей : 
-        <span class="installment-period">12</span> месяцев = 
+        <span class="installment-total">{{ price|replace({' лей': '', ' ': ''}) }}</span> лей : 
+        <span class="installment-period">{{ default_month }}</span> месяцев = 
         <span class="installment-monthly">0</span> лей / месяц
     </div>
     
-    <button class="btn btn-primary installment-btn" style="width: 100%; background: #5c6bc0; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+    <button class="btn btn-primary installment-btn" style="width: 100%; background: #5c6bc0; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; color: white;">
         <svg width="20" height="20" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;" fill="currentColor">
             <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
         </svg>
@@ -40,6 +63,4 @@
             <span>Мгновенное оформление</span>
         </div>
     </div>
-    
-    <input type="hidden" class="installment-months" value="{{ months|json_encode }}">
 </div>
