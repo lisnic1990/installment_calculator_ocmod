@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Installment Calculator</name>
+    <code>installment_calculator</code>
+    <version>1.0</version>
+    <author>Custom</author>
+    
+    <!-- Inject calculator block -->
+    <file path="catalog/view/theme/*/template/product/product.twig">
+        <operation>
+            <search><![CDATA[<div id="product">]]></search>
+            <add position="after"><![CDATA[
+{{ installment_calculator }}
+{{ installment_popup }}
+            ]]></add>
+        </operation>
+    </file>
+</modification>

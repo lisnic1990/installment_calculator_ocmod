@@ -1,0 +1,51 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1>{{ heading_title }}</h1>
+            <ul class="breadcrumb">
+                <li><a href="{{ home }}">Home</a></li>
+                <li><a href="{{ extension }}">Extensions</a></li>
+                <li><a href="{{ cancel }}">{{ heading_title }}</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+            </div>
+            <div class="panel-body">
+                <form action="{{ action }}" method="post" enctype="multipart/form-data" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{{ entry_status }}</label>
+                        <div class="col-sm-10">
+                            <select name="module_installment_calculator_status" class="form-control">
+                                <option value="1"{% if module_installment_calculator_status %} selected{% endif %}>{{ text_enabled }}</option>
+                                <option value="0"{% if not module_installment_calculator_status %} selected{% endif %}>{{ text_disabled }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{{ entry_months }}</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="module_installment_calculator_months" value="{{ module_installment_calculator_months }}" placeholder="4,6,10,12" class="form-control" />
+                            <span class="help-block">Через запятую: 4,6,10,12</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{{ entry_email }}</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="module_installment_calculator_email" value="{{ module_installment_calculator_email }}" class="form-control" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="panel-footer text-right">
+                <button type="submit" form="form-installment" class="btn btn-primary">{{ button_save }}</button>
+                <a href="{{ cancel }}" class="btn btn-default">{{ button_cancel }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}

@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.tpl": "html",
+        "*.twig": "twig",
+        "*.ocmod": "xml"
+    },
+    "php.suggest.basic": false,
+    "php.validate.enable": true,
+    "files.encoding": "utf8"
+}

@@ -1,0 +1,68 @@
+<div id="installment-popup" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document" style="max-width: 600px;">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="border-bottom: none; padding: 20px 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="#5c6bc0">
+                        <path d="M20 8c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12z"/>
+                    </svg>
+                    <h4 style="margin: 0; font-size: 24px; font-weight: 700;">Оформить рассрочку</h4>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" style="font-size: 30px; opacity: 0.5;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px 30px;">
+                <div style="display: flex; gap: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <img id="popup-product-image" src="" style="width: 80px; height: 80px; object-fit: contain;">
+                    <div style="flex: 1;">
+                        <div id="popup-product-name" style="font-weight: 600; margin-bottom: 10px;"></div>
+                        <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
+                            <span id="popup-price"></span> лей
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px;">
+                    <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Сумма рассрочки:</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
+                            <span id="popup-total"></span> лей
+                        </div>
+                    </div>
+                    <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Период рассрочки:</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
+                            <span id="popup-months"></span> месяцев
+                        </div>
+                    </div>
+                    <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Оплата в месяц:</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
+                            <span id="popup-monthly"></span> лей
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 style="font-size: 18px; font-weight: 700; margin-bottom: 15px;">Оставьте данные</h5>
+                <p style="color: #666; margin-bottom: 20px;">С вами свяжется наш менеджер</p>
+                
+                <form id="installment-form">
+                    <div class="form-group">
+                        <label style="font-size: 14px; color: #5c6bc0;">Имя</label>
+                        <input type="text" name="name" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" required>
+                    </div>
+                    <div class="form-group" style="position: relative;">
+                        <label style="font-size: 14px; color: #5c6bc0;">Номер телефона</label>
+                        <input type="tel" name="phone" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" required>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#e91e63" style="position: absolute; right: 12px; bottom: 12px;">
+                            <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.65.25-1C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/>
+                        </svg>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; background: #5c6bc0; border: none; padding: 15px; font-size: 16px; border-radius: 8px; margin-top: 10px;">
+                        Отправить данные
+                    </button>
+                </form>
+                <div id="installment-message" style="margin-top: 15px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
