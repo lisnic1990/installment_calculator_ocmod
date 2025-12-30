@@ -2,16 +2,45 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.0.2</version>
+    <version>1.0.0.3</version>
     <author>Custom</author>
     
-    <!-- Inject calculator block -->
+    <!-- Инъекция в контроллер продукта -->
+    <file path="catalog/controller/product/product.php">
+        <operation>
+            <search><![CDATA[$data['column_left'] = $this->load->controller('common/column_left');]]></search>
+            <add position="after"><![CDATA[
+        // Installment Calculator
+        $this->load->model('setting/setting');
+        $installment_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
+        if (!empty($installment_settings['module_installment_calculator_status'])) {
+            $data['installment_calculator'] = $this->load->controller('extension/module/installment_calculator');
+            $data['installment_popup'] = $this->load->controller('extension/module/installment_calculator/popup');
+        } else {
+            $data['installment_calculator'] = '';
+            $data['installment_popup'] = '';
+        }
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- Инъекция в шаблон продукта -->
     <file path="catalog/view/theme/*/template/product/product.twig">
         <operation>
-            <search><![CDATA[<div class="btn-group">]]></search>
+            <search><![CDATA[<div id="product">]]></search>
             <add position="after"><![CDATA[
-            {{ installment_calculator }}
-            {{ installment_popup }}
+{{ installment_calculator }}
+{{ installment_popup }}
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- Подключение JS -->
+    <file path="catalog/view/theme/*/template/common/header.twig">
+        <operation>
+            <search><![CDATA[</head>]]></search>
+            <add position="before"><![CDATA[
+<script src="catalog/view/javascript/installment_calculator.js"></script>
             ]]></add>
         </operation>
     </file>

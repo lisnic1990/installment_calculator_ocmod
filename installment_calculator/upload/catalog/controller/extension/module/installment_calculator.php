@@ -17,12 +17,14 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         
         $data['default_month'] = 12;
         
+        // ВАЖНО: получаем цену из request (передаётся из product контроллера)
+        $data['price'] = isset($this->request->get['price']) ? $this->request->get['price'] : '0';
+        
         return $this->load->view('extension/module/installment_calculator', $data);
     }
     
     public function popup() {
         $this->load->language('extension/module/installment_calculator');
-        
         return $this->load->view('extension/module/installment_popup');
     }
     
@@ -30,7 +32,6 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         $this->load->language('extension/module/installment_calculator');
         $json = [];
         
-        // Validation
         if (empty($this->request->post['name'])) {
             $json['error'] = $this->language->get('error_name');
         }
