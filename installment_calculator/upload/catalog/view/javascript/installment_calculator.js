@@ -2,20 +2,44 @@ $(document).ready(function() {
     const $calculator = $('.installment-calculator');
     
     if (!$calculator.length) {
-        return; // Калькулятор не найден на странице
-    }
-    
-    // Получение цены товара
-    const priceText = $('#product .price .price-new, #product .price').first().text();
-    const price = parseFloat(priceText.replace(/[^\d]/g, ''));
-    
-    if (!price || price <= 0) {
-        console.error('Installment Calculator: Не удалось получить цену товара');
+        console.log('Installment Calculator: блок не найден');
         return;
     }
     
-    // Получение доступных месяцев из data-атрибута
-    let availableMonths = [12]; // По умолчанию
+    // Получение цены - UniShop2 специфично
+    let price = 0;
+    
+    // Попытка 1: стандартный селектор
+    let priceText = $('.price .price-new').first().text();
+    
+    // Попытка 2: для UniShop2
+    if (!priceText) {
+        priceText = $('ul.list-unstyled li h2').first().text();
+    }
+    
+    // Попытка 3: любая цена на странице
+    if (!priceText) {
+        priceText = $('h2:contains("р.")').first().text();
+    }
+    
+    console.log('Price text found:', priceText);
+    
+    price = parseFloat(priceText.replace(/[^\d]/g, ''));
+    
+    if (!price || price <= 0) {
+        console.error('Installment Calculator: Не удалось получить цену товара');
+        // Пробуем взять из meta или data атрибута
+        price = parseFloat($('meta[property="product:price:amount"]').attr('content')) || 0;
+    }
+    
+    console.log('Final price:', price);
+    
+    if (price <= 0) {
+        return;
+    }
+    
+    // Получение доступных месяцев
+    let availableMonths = [12];
     try {
         const monthsData = $calculator.attr('data-months');
         if (monthsData) {
@@ -25,12 +49,16 @@ $(document).ready(function() {
         console.error('Installment Calculator: Ошибка парсинга месяцев', e);
     }
     
-    // Данные товара
-    const productName = $('h1').first().text().trim();
-    const productImage = $('#product .thumbnail img, #product .product-thumb img').first().attr('src');
+    // Данные товара - для UniShop2
+    const productName = $('h1').first().text().trim() || $('title').text().trim();
+    const productImage = $('.thumbnail img').first().attr('src') || 
+                         $('.product-thumb img').first().attr('src') ||
+                         $('img[itemprop="image"]').first().attr('src');
     const productUrl = window.location.href;
     
-    let currentMonths = availableMonths[availableMonths.length - 1] || 12; // По умолчанию последний (обычно максимальный)
+    console.log('Product:', productName, productImage);
+    
+    let currentMonths = availableMonths[availableMonths.length - 1] || 12;
     
     // Функция расчёта
     function calculate(months) {
@@ -41,7 +69,6 @@ $(document).ready(function() {
         $('.installment-price').text(price);
         currentMonths = months;
         
-        // Обновляем активную кнопку
         $('.installment-period-btn').each(function() {
             const btnMonths = parseInt($(this).attr('data-months'));
             if (btnMonths === months) {
@@ -60,7 +87,7 @@ $(document).ready(function() {
         });
     }
     
-    // Инициализация с максимальным периодом
+    // Инициализация
     calculate(currentMonths);
     
     // Обработчик выбора периода
@@ -89,13 +116,12 @@ $(document).ready(function() {
             name: $('input[name="name"]').val().trim(),
             phone: $('input[name="phone"]').val().trim(),
             product_name: productName,
-            price: price + ' лей',
+            price: price + ' р.',
             months: currentMonths,
-            monthly: Math.round(price / currentMonths) + ' лей',
+            monthly: Math.round(price / currentMonths) + ' р.',
             product_url: productUrl
         };
         
-        // Простая валидация
         if (!formData.name) {
             $('#installment-message')
                 .removeClass('alert-success')
@@ -144,10 +170,8 @@ $(document).ready(function() {
                         .text(json.success)
                         .show();
                     
-                    // Очистка формы
                     $('#installment-form')[0].reset();
                     
-                    // Закрытие через 2 секунды
                     setTimeout(function() {
                         $('#installment-popup').modal('hide');
                         $('#installment-message').hide();
@@ -165,7 +189,6 @@ $(document).ready(function() {
         });
     });
     
-    // Закрытие сообщения при начале нового ввода
     $('#installment-form input').on('focus', function() {
         $('#installment-message').fadeOut();
     });

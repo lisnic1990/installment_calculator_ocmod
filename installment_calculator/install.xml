@@ -1,48 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>Installment Calculator</name>
-    <code>installment_calculator</code>
-    <version>1.0.0.5</version>
+    <name>Installment Calculator for UniShop2</name>
+    <code>installment_calculator_unishop2</code>
+    <version>1.0.0.6</version>
     <author>Custom</author>
     
-    <!-- Вариант 1: После div#product -->
-    <file path="catalog/view/theme/*/template/product/product.twig">
+    <!-- Для UniShop2: вставка после цены -->
+    <file path="catalog/view/theme/unishop2/template/product/product.twig">
         <operation>
-            <search><![CDATA[<div id="product">]]></search>
-            <add position="after"><![CDATA[
-{% if installment_calculator %}
-{{ installment_calculator }}
-{% endif %}
-            ]]></add>
-        </operation>
-    </file>
-    
-    <!-- Вариант 2: Перед кнопкой купить (если первый не сработает) -->
-    <file path="catalog/view/theme/*/template/product/product.twig">
-        <operation error="skip">
-            <search><![CDATA[<button type="button" id="button-cart"]]></search>
+            <search><![CDATA[<ul class="list-unstyled">]]></search>
             <add position="before"><![CDATA[
 {% if installment_calculator %}
+<div class="installment-wrapper">
 {{ installment_calculator }}
+</div>
 {% endif %}
             ]]></add>
         </operation>
     </file>
     
-    <!-- Вариант 3: После цены (для некоторых тем) -->
-    <file path="catalog/view/theme/*/template/product/product.twig">
-        <operation error="skip">
-            <search><![CDATA[<ul class="list-unstyled">]]></search>
-            <add position="after"><![CDATA[
-{% if installment_calculator %}
-{{ installment_calculator }}
-{% endif %}
-            ]]></add>
-        </operation>
-    </file>
-    
-    <!-- Popup всегда в конце -->
-    <file path="catalog/view/theme/*/template/product/product.twig">
+    <!-- Popup в конец -->
+    <file path="catalog/view/theme/unishop2/template/product/product.twig">
         <operation>
             <search><![CDATA[{{ footer }}]]></search>
             <add position="before"><![CDATA[
@@ -53,12 +31,24 @@
         </operation>
     </file>
     
-    <!-- Подключение JS -->
-    <file path="catalog/view/theme/*/template/common/header.twig">
+    <!-- JS в header -->
+    <file path="catalog/view/theme/unishop2/template/common/header.twig">
         <operation>
             <search><![CDATA[</head>]]></search>
             <add position="before"><![CDATA[
 <script src="catalog/view/javascript/installment_calculator.js"></script>
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- Fallback: вставка перед кнопкой Купить -->
+    <file path="catalog/view/theme/unishop2/template/product/product.twig">
+        <operation error="skip">
+            <search><![CDATA[<button type="button" id="button-cart"]]></search>
+            <add position="before"><![CDATA[
+{% if installment_calculator %}
+{{ installment_calculator }}
+{% endif %}
             ]]></add>
         </operation>
     </file>

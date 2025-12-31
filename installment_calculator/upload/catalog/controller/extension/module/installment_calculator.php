@@ -2,20 +2,38 @@
 class ControllerExtensionModuleInstallmentCalculator extends Controller {
     
     // Метод для инъекции через событие
-    public function injectToProduct(&$route, &$data) {
+    public function injectToProduct(&$route, &$data, &$output) {
         $this->load->model('setting/setting');
         $settings = $this->model_setting_setting->getSetting('module_installment_calculator');
         
         // Проверяем статус модуля
         if (empty($settings['module_installment_calculator_status'])) {
-            $data['installment_calculator'] = '';
-            $data['installment_popup'] = '';
             return;
         }
         
-        // Загружаем модуль
-        $data['installment_calculator'] = $this->index();
-        $data['installment_popup'] = $this->popup();
+        // Генерируем HTML
+        $calculator_html = $this->index();
+        $popup_html = $this->popup();
+        
+        // Вставляем в output напрямую
+        if (!empty($calculator_html) && !empty($popup_html)) {
+            // Находим место для вставки калькулятора (перед кнопкой купить)
+            $search = '<button type="button" id="button-cart"';
+            if (strpos($output, $search) !== false) {
+                $output = str_replace(
+                    $search,
+                    $calculator_html . "\n" . $search,
+                    $output
+                );
+            }
+            
+            // Вставляем popup перед </body>
+            $output = str_replace(
+                '</body>',
+                $popup_html . "\n</body>",
+                $output
+            );
+        }
     }
     
     public function index() {
@@ -28,12 +46,10 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
             return '';
         }
         
-        // Получение настроенных периодов
         $months_string = !empty($settings['module_installment_calculator_months']) 
             ? $settings['module_installment_calculator_months'] 
             : '4,6,10,12';
         
-        // Преобразование в массив целых чисел
         $months = array_map('intval', array_map('trim', explode(',', $months_string)));
         sort($months);
         
