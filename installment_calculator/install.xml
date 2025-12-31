@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.0.7</version>
+    <version>1.0.1</version>
     <author>Custom</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
@@ -10,7 +10,7 @@
         <operation>
             <search><![CDATA[$data['footer'] = $this->load->controller('common/footer');]]></search>
             <add position="before"><![CDATA[
-        // Installment Calculator - Direct Injection
+        // Installment Calculator
         $this->load->model('setting/setting');
         $inst_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
         
@@ -21,8 +21,9 @@
             
             $inst_data = array();
             $inst_data['months'] = $months;
+            $inst_data['months_json'] = json_encode($months);
             $inst_data['default_month'] = end($months);
-            $inst_data['price'] = '0';
+            $inst_data['price'] = isset($data['price']) ? $data['price'] : '0';
             
             $data['installment_calculator'] = $this->load->view('extension/module/installment_calculator', $inst_data);
             $data['installment_popup'] = $this->load->view('extension/module/installment_popup');
@@ -54,12 +55,12 @@
         </operation>
     </file>
     
-    <!-- JS В HEADER -->
+    <!-- JS В HEADER - ИСПРАВЛЕНО -->
     <file path="catalog/view/theme/unishop2_free/template/common/header.twig">
         <operation>
             <search><![CDATA[</head>]]></search>
             <add position="before"><![CDATA[
-<script src="catalog/view/javascript/installment_calculator.js"></script>
+<script src="catalog/view/javascript/installment_calculator.js?v=1.0"></script>
             ]]></add>
         </operation>
     </file>
@@ -70,6 +71,16 @@
             <search><![CDATA[<button type="button" id="button-cart"]]></search>
             <add position="before"><![CDATA[
 {{ installment_calculator }}
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- Fallback POPUP для default темы -->
+    <file path="catalog/view/theme/default/template/product/product.twig">
+        <operation error="skip">
+            <search><![CDATA[{{ footer }}]]></search>
+            <add position="before"><![CDATA[
+{{ installment_popup }}
             ]]></add>
         </operation>
     </file>

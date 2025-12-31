@@ -103,36 +103,5 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         return !$this->error;
     }
     
-    public function install() {
-        $this->load->model('setting/event');
-        
-        // Удаляем старые события если есть
-        $this->model_setting_event->deleteEventByCode('installment_calculator');
-        
-        // Добавляем событие для инъекции в контроллер продукта
-        $this->model_setting_event->addEvent(
-            'installment_calculator',
-            'catalog/controller/product/product/before',
-            'extension/module/installment_calculator/injectToProduct'
-        );
-        
-        // Даем права администратору
-        $this->load->model('user/user_group');
-        $this->model_user_user_group->addPermission(1, 'access', 'extension/module/installment_calculator');
-        $this->model_user_user_group->addPermission(1, 'modify', 'extension/module/installment_calculator');
-        
-        // Устанавливаем дефолтные настройки
-        $this->load->model('setting/setting');
-        $defaults = [
-            'module_installment_calculator_status' => 1,
-            'module_installment_calculator_months' => '4,6,10,12',
-            'module_installment_calculator_email' => $this->config->get('config_email')
-        ];
-        $this->model_setting_setting->editSetting('module_installment_calculator', $defaults);
-    }
-    
-    public function uninstall() {
-        $this->load->model('setting/event');
-        $this->model_setting_event->deleteEventByCode('installment_calculator');
-    }
+    // УДАЛЕНЫ методы install() и uninstall() - они не нужны для OCMOD
 }
