@@ -1,38 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>Installment Calculator for UniShop2</name>
-    <code>installment_calculator_unishop2</code>
-    <version>1.0.0.6</version>
+    <name>Installment Calculator</name>
+    <code>installment_calculator</code>
+    <version>1.0.0.7</version>
     <author>Custom</author>
     
-    <!-- Для UniShop2: вставка после цены -->
-    <file path="catalog/view/theme/unishop2/template/product/product.twig">
+    <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
+    <file path="catalog/controller/product/product.php">
         <operation>
-            <search><![CDATA[<ul class="list-unstyled">]]></search>
+            <search><![CDATA[$data['footer'] = $this->load->controller('common/footer');]]></search>
             <add position="before"><![CDATA[
-{% if installment_calculator %}
-<div class="installment-wrapper">
-{{ installment_calculator }}
-</div>
-{% endif %}
+        // Installment Calculator - Direct Injection
+        $this->load->model('setting/setting');
+        $inst_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
+        
+        if (!empty($inst_settings['module_installment_calculator_status'])) {
+            $months_string = !empty($inst_settings['module_installment_calculator_months']) ? $inst_settings['module_installment_calculator_months'] : '4,6,10,12';
+            $months = array_map('intval', array_map('trim', explode(',', $months_string)));
+            sort($months);
+            
+            $inst_data = array();
+            $inst_data['months'] = $months;
+            $inst_data['default_month'] = end($months);
+            $inst_data['price'] = '0';
+            
+            $data['installment_calculator'] = $this->load->view('extension/module/installment_calculator', $inst_data);
+            $data['installment_popup'] = $this->load->view('extension/module/installment_popup');
+        } else {
+            $data['installment_calculator'] = '';
+            $data['installment_popup'] = '';
+        }
             ]]></add>
         </operation>
     </file>
     
-    <!-- Popup в конец -->
-    <file path="catalog/view/theme/unishop2/template/product/product.twig">
+    <!-- ВСТАВКА В ШАБЛОН unishop2_free -->
+    <file path="catalog/view/theme/unishop2_free/template/product/product.twig">
+        <operation>
+            <search><![CDATA[<div class="product-block]]></search>
+            <add position="before"><![CDATA[
+{{ installment_calculator }}
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- POPUP ПЕРЕД FOOTER -->
+    <file path="catalog/view/theme/unishop2_free/template/product/product.twig">
         <operation>
             <search><![CDATA[{{ footer }}]]></search>
             <add position="before"><![CDATA[
-{% if installment_popup %}
 {{ installment_popup }}
-{% endif %}
             ]]></add>
         </operation>
     </file>
     
-    <!-- JS в header -->
-    <file path="catalog/view/theme/unishop2/template/common/header.twig">
+    <!-- JS В HEADER -->
+    <file path="catalog/view/theme/unishop2_free/template/common/header.twig">
         <operation>
             <search><![CDATA[</head>]]></search>
             <add position="before"><![CDATA[
@@ -41,14 +64,12 @@
         </operation>
     </file>
     
-    <!-- Fallback: вставка перед кнопкой Купить -->
-    <file path="catalog/view/theme/unishop2/template/product/product.twig">
+    <!-- Fallback для default темы -->
+    <file path="catalog/view/theme/default/template/product/product.twig">
         <operation error="skip">
             <search><![CDATA[<button type="button" id="button-cart"]]></search>
             <add position="before"><![CDATA[
-{% if installment_calculator %}
 {{ installment_calculator }}
-{% endif %}
             ]]></add>
         </operation>
     </file>
