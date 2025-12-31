@@ -1,13 +1,29 @@
 <?php
 class ControllerExtensionModuleInstallmentCalculator extends Controller {
     
+    // Метод для инъекции через событие
+    public function injectToProduct(&$route, &$data) {
+        $this->load->model('setting/setting');
+        $settings = $this->model_setting_setting->getSetting('module_installment_calculator');
+        
+        // Проверяем статус модуля
+        if (empty($settings['module_installment_calculator_status'])) {
+            $data['installment_calculator'] = '';
+            $data['installment_popup'] = '';
+            return;
+        }
+        
+        // Загружаем модуль
+        $data['installment_calculator'] = $this->index();
+        $data['installment_popup'] = $this->popup();
+    }
+    
     public function index() {
         $this->load->language('extension/module/installment_calculator');
         $this->load->model('setting/setting');
         
         $settings = $this->model_setting_setting->getSetting('module_installment_calculator');
         
-        // Проверка статуса модуля
         if (empty($settings['module_installment_calculator_status'])) {
             return '';
         }
@@ -19,13 +35,11 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         
         // Преобразование в массив целых чисел
         $months = array_map('intval', array_map('trim', explode(',', $months_string)));
-        
-        // Сортировка по возрастанию
         sort($months);
         
         $data['months'] = $months;
-        $data['default_month'] = end($months); // Последний (максимальный) период
-        $data['price'] = '0'; // Будет взято из JS на клиенте
+        $data['default_month'] = end($months);
+        $data['price'] = '0';
         
         return $this->load->view('extension/module/installment_calculator', $data);
     }
@@ -39,7 +53,6 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         $this->load->language('extension/module/installment_calculator');
         $json = [];
         
-        // Валидация
         if (empty($this->request->post['name'])) {
             $json['error'] = $this->language->get('error_name');
         }
@@ -56,7 +69,6 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
             $json['error'] = 'Не указан период рассрочки';
         }
         
-        // Если ошибок нет, отправляем письмо
         if (!isset($json['error'])) {
             $this->load->model('setting/setting');
             $settings = $this->model_setting_setting->getSetting('module_installment_calculator');

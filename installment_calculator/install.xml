@@ -2,31 +2,24 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.0.4</version>
+    <version>1.0.0.5</version>
     <author>Custom</author>
     
-    <!-- Инъекция в контроллер продукта -->
-    <file path="catalog/controller/product/product.php">
+    <!-- Вариант 1: После div#product -->
+    <file path="catalog/view/theme/*/template/product/product.twig">
         <operation>
-            <search><![CDATA[$data['column_left'] = $this->load->controller('common/column_left');]]></search>
+            <search><![CDATA[<div id="product">]]></search>
             <add position="after"><![CDATA[
-        // Installment Calculator Module
-        $this->load->model('setting/setting');
-        $installment_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
-        if (!empty($installment_settings['module_installment_calculator_status'])) {
-            $data['installment_calculator'] = $this->load->controller('extension/module/installment_calculator');
-            $data['installment_popup'] = $this->load->controller('extension/module/installment_calculator/popup');
-        } else {
-            $data['installment_calculator'] = '';
-            $data['installment_popup'] = '';
-        }
+{% if installment_calculator %}
+{{ installment_calculator }}
+{% endif %}
             ]]></add>
         </operation>
     </file>
     
-    <!-- Инъекция в шаблон продукта - после кнопки купить -->
+    <!-- Вариант 2: Перед кнопкой купить (если первый не сработает) -->
     <file path="catalog/view/theme/*/template/product/product.twig">
-        <operation>
+        <operation error="skip">
             <search><![CDATA[<button type="button" id="button-cart"]]></search>
             <add position="before"><![CDATA[
 {% if installment_calculator %}
@@ -34,6 +27,22 @@
 {% endif %}
             ]]></add>
         </operation>
+    </file>
+    
+    <!-- Вариант 3: После цены (для некоторых тем) -->
+    <file path="catalog/view/theme/*/template/product/product.twig">
+        <operation error="skip">
+            <search><![CDATA[<ul class="list-unstyled">]]></search>
+            <add position="after"><![CDATA[
+{% if installment_calculator %}
+{{ installment_calculator }}
+{% endif %}
+            ]]></add>
+        </operation>
+    </file>
+    
+    <!-- Popup всегда в конце -->
+    <file path="catalog/view/theme/*/template/product/product.twig">
         <operation>
             <search><![CDATA[{{ footer }}]]></search>
             <add position="before"><![CDATA[

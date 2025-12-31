@@ -9,7 +9,7 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
             $this->model_setting_setting->editSetting('module_installment_calculator', $this->request->post);
-            $this->session->data['success'] = $this->language->get('text_success');
+            $this->session->data['success'] = 'Настройки сохранены!';
             $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true));
         }
         
@@ -29,42 +29,40 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         $data['breadcrumbs'] = [];
         
         $data['breadcrumbs'][] = [
-            'text' => $this->language->get('text_home'),
+            'text' => 'Главная',
             'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
         ];
         
         $data['breadcrumbs'][] = [
-            'text' => $this->language->get('text_extension'),
+            'text' => 'Расширения',
             'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true)
         ];
         
         $data['breadcrumbs'][] = [
-            'text' => $this->language->get('heading_title'),
+            'text' => 'Калькулятор рассрочки',
             'href' => $this->url->link('extension/module/installment_calculator', 'user_token=' . $this->session->data['user_token'], true)
         ];
         
         $data['action'] = $this->url->link('extension/module/installment_calculator', 'user_token=' . $this->session->data['user_token'], true);
         $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
         
-        // Языковые переменные
-        $data['heading_title'] = $this->language->get('heading_title');
-        $data['text_edit'] = $this->language->get('text_edit');
-        $data['text_enabled'] = $this->language->get('text_enabled');
-        $data['text_disabled'] = $this->language->get('text_disabled');
-        $data['text_home'] = $this->language->get('text_home');
-        $data['text_extension'] = $this->language->get('text_extension');
+        $data['heading_title'] = 'Калькулятор рассрочки';
+        $data['text_edit'] = 'Редактирование модуля';
+        $data['text_enabled'] = 'Включено';
+        $data['text_disabled'] = 'Выключено';
+        $data['text_home'] = 'Главная';
+        $data['text_extension'] = 'Расширения';
         
-        $data['entry_status'] = $this->language->get('entry_status');
-        $data['entry_months'] = $this->language->get('entry_months');
-        $data['entry_email'] = $this->language->get('entry_email');
+        $data['entry_status'] = 'Статус';
+        $data['entry_months'] = 'Периоды рассрочки';
+        $data['entry_email'] = 'Email для заявок';
         
-        $data['help_months'] = $this->language->get('help_months');
-        $data['help_email'] = $this->language->get('help_email');
+        $data['help_months'] = 'Укажите доступные периоды через запятую: 4,6,10,12';
+        $data['help_email'] = 'Email для заявок. Если не указан - используется email магазина';
         
-        $data['button_save'] = $this->language->get('button_save');
-        $data['button_cancel'] = $this->language->get('button_cancel');
+        $data['button_save'] = 'Сохранить';
+        $data['button_cancel'] = 'Отмена';
         
-        // Значения из POST или из конфига
         if (isset($this->request->post['module_installment_calculator_status'])) {
             $data['module_installment_calculator_status'] = $this->request->post['module_installment_calculator_status'];
         } else {
@@ -100,15 +98,37 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
     
     protected function validate() {
         if (!$this->user->hasPermission('modify', 'extension/module/installment_calculator')) {
-            $this->error['warning'] = $this->language->get('error_permission');
+            $this->error['warning'] = 'У вас нет прав!';
         }
-        
         return !$this->error;
     }
     
     public function install() {
         $this->load->model('setting/event');
-        $this->model_setting_event->addEvent('installment_calculator', 'catalog/view/product/product/before', 'extension/module/installment_calculator/addCalculator');
+        
+        // Удаляем старые события если есть
+        $this->model_setting_event->deleteEventByCode('installment_calculator');
+        
+        // Добавляем событие для инъекции в контроллер продукта
+        $this->model_setting_event->addEvent(
+            'installment_calculator',
+            'catalog/controller/product/product/before',
+            'extension/module/installment_calculator/injectToProduct'
+        );
+        
+        // Даем права администратору
+        $this->load->model('user/user_group');
+        $this->model_user_user_group->addPermission(1, 'access', 'extension/module/installment_calculator');
+        $this->model_user_user_group->addPermission(1, 'modify', 'extension/module/installment_calculator');
+        
+        // Устанавливаем дефолтные настройки
+        $this->load->model('setting/setting');
+        $defaults = [
+            'module_installment_calculator_status' => 1,
+            'module_installment_calculator_months' => '4,6,10,12',
+            'module_installment_calculator_email' => $this->config->get('config_email')
+        ];
+        $this->model_setting_setting->editSetting('module_installment_calculator', $defaults);
     }
     
     public function uninstall() {
