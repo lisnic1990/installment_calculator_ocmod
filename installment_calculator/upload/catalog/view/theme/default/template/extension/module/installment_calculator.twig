@@ -1,11 +1,11 @@
-<div class="installment-calculator" style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 20px 0;" data-months='{{ months_json|raw }}'>
+<div class="installment-calculator" style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 20px 0;" data-months='{{ months|json_encode|raw }}'>
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
         <svg width="40" height="40" viewBox="0 0 40 40" style="color: #e91e63;">
             <path fill="currentColor" d="M20 8c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10z"/>
         </svg>
         <div>
             <div style="font-size: 32px; font-weight: 700;">
-                <span class="installment-price">{{ price|replace({' леи': '', ' ': ''}) }}</span> леи
+                <span class="installment-price">0</span> <span class="installment-currency"></span>
             </div>
             <div style="background: #e91e63; color: white; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 14px; margin-top: 5px;">
                 Рассрочка <span class="installment-period">{{ default_month }}</span>м.
@@ -37,9 +37,9 @@
     </div>
     
     <div style="font-size: 18px; color: #e91e63; margin-bottom: 20px;">
-        <span class="installment-total">{{ price|replace({' леи': '', ' ': ''}) }}</span> леи : 
+        <span class="installment-total">0</span> <span class="installment-currency"></span> : 
         <span class="installment-period">{{ default_month }}</span> месяцев = 
-        <span class="installment-monthly">0</span> леи / месяц
+        <span class="installment-monthly">0</span> <span class="installment-currency"></span> / месяц
     </div>
     
     <button class="btn btn-primary installment-btn" style="width: 100%; background: #5c6bc0; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; color: white;">
@@ -64,3 +64,19 @@
         </div>
     </div>
 </div>
+
+<script>
+// Обновляем валюту после загрузки калькулятора
+$(document).ready(function() {
+    // Берем валюту из текущей страницы
+    var priceText = $('.price').first().text();
+    var currency = 'р.';
+    
+    if (priceText.indexOf('лей') !== -1) currency = 'лей';
+    else if (priceText.indexOf('$') !== -1) currency = '$';
+    else if (priceText.indexOf('€') !== -1) currency = '€';
+    else if (priceText.indexOf('₴') !== -1) currency = '₴';
+    
+    $('.installment-currency').text(currency);
+});
+</script>

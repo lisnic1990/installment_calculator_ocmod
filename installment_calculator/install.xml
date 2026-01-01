@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.1</version>
+    <version>1.0.4</version>
     <author>Custom</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
@@ -35,6 +35,8 @@
         </operation>
     </file>
     
+    <!-- для unishop2_free темы -->
+
     <!-- ВСТАВКА В ШАБЛОН unishop2_free -->
     <file path="catalog/view/theme/unishop2_free/template/product/product.twig">
         <operation>
@@ -65,11 +67,13 @@
         </operation>
     </file>
     
+    <!-- для default темы -->
+
     <!-- Fallback для default темы -->
     <file path="catalog/view/theme/default/template/product/product.twig">
         <operation error="skip">
-            <search><![CDATA[<button type="button" id="button-cart"]]></search>
-            <add position="before"><![CDATA[
+            <search><![CDATA[<button type="button" id="button-cart" data-loading-text="{{ text_loading }}" class="btn btn-primary btn-lg btn-block">{{ button_cart }}</button>]]></search>
+            <add position="after"><![CDATA[
 {{ installment_calculator }}
             ]]></add>
         </operation>
@@ -84,4 +88,15 @@
             ]]></add>
         </operation>
     </file>
+
+    <!-- JS В HEADER - ИСПРАВЛЕНО -->
+    <file path="catalog/view/theme/default/template/common/header.twig">
+        <operation>
+            <search><![CDATA[</head>]]></search>
+            <add position="before"><![CDATA[
+<script src="catalog/view/javascript/installment_calculator.js?v=2.0"></script>
+            ]]></add>
+        </operation>
+    </file>
+
 </modification>

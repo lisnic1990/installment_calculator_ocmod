@@ -6,35 +6,123 @@ $(document).ready(function() {
         return;
     }
     
-    // Получение цены - UniShop2 специфично
+    // ========================================
+    // ИСПРАВЛЕНИЕ: Улучшенный парсинг цены с правильным определением десятичного разделителя
+    // ========================================
+    
     let price = 0;
+    let currency = 'р.'; // По умолчанию
     
-    // Попытка 1: стандартный селектор
-    let priceText = $('.price .price-new').first().text();
+    // Получаем текст цены из разных возможных мест
+    let priceText = '';
+    let priceElement = null;
     
-    // Попытка 2: для UniShop2
-    if (!priceText) {
-        priceText = $('ul.list-unstyled li h2').first().text();
+    // Попытка 1: .price-new
+    priceElement = $('.price .price-new').first();
+    if (priceElement.length) {
+        priceText = priceElement.text();
     }
     
-    // Попытка 3: любая цена на странице
+    // Попытка 2: любой h2 с ценой
     if (!priceText) {
-        priceText = $('h2:contains("р.")').first().text();
+        priceElement = $('ul.list-unstyled li h2').first();
+        if (priceElement.length) {
+            priceText = priceElement.text();
+        }
+    }
+    
+    // Попытка 3: любой элемент с классом price
+    if (!priceText) {
+        priceElement = $('.price').first();
+        if (priceElement.length) {
+            priceText = priceElement.text();
+        }
     }
     
     console.log('Price text found:', priceText);
     
-    price = parseFloat(priceText.replace(/[^\d]/g, ''));
-    
-    if (!price || price <= 0) {
-        console.error('Installment Calculator: Не удалось получить цену товара');
-        // Пробуем взять из meta или data атрибута
-        price = parseFloat($('meta[property="product:price:amount"]').attr('content')) || 0;
+    if (priceText) {
+        // Определяем валюту из текста
+        if (priceText.indexOf('лей') !== -1 || priceText.indexOf('MDL') !== -1) {
+            currency = 'лей';
+        } else if (priceText.indexOf('р.') !== -1 || priceText.indexOf('руб') !== -1 || priceText.indexOf('RUB') !== -1) {
+            currency = 'р.';
+        } else if (priceText.indexOf('$') !== -1 || priceText.indexOf('USD') !== -1) {
+            currency = '$';
+        } else if (priceText.indexOf('€') !== -1 || priceText.indexOf('EUR') !== -1) {
+            currency = '€';
+        } else if (priceText.indexOf('₴') !== -1 || priceText.indexOf('UAH') !== -1) {
+            currency = '₴';
+        }
+        
+        // УЛУЧШЕННЫЙ парсинг цены
+        // Удаляем все кроме цифр, точки и запятой
+        let cleanPrice = priceText.replace(/[^\d.,]/g, '');
+        
+        console.log('Clean price (step 1):', cleanPrice);
+        
+        // Определяем десятичный разделитель по эвристике:
+        // Если последний разделитель (. или ,) идет перед ровно 2 цифрами - это десятичный разделитель
+        // Примеры: 100.00 -> десятичная точка, 1,000.00 -> точка десятичная, запятая - тысячи
+        let decimalSeparator = null;
+        let thousandSeparator = null;
+        
+        const lastSepMatch = cleanPrice.match(/[.,](\d+)$/);
+        if (lastSepMatch) {
+            const digitsAfterLastSep = lastSepMatch[1].length;
+            if (digitsAfterLastSep === 2) {
+                // Последний разделитель с ровно 2 цифрами - это десятичный разделитель
+                decimalSeparator = cleanPrice.match(/([.,])\d{2}$/)[1];
+                thousandSeparator = decimalSeparator === '.' ? ',' : '.';
+            } else if (digitsAfterLastSep === 3) {
+                // Последний разделитель с 3 цифрами - скорее всего разделитель тысяч
+                // Ищем предпоследний разделитель
+                const beforeLast = cleanPrice.substring(0, cleanPrice.lastIndexOf(lastSepMatch[0]));
+                const prevSepMatch = beforeLast.match(/[.,](\d+)$/);
+                if (prevSepMatch && prevSepMatch[1].length === 2) {
+                    // Предпоследний с 2 цифрами - это десятичный
+                    decimalSeparator = prevSepMatch[0].charAt(0);
+                    thousandSeparator = decimalSeparator === '.' ? ',' : '.';
+                } else {
+                    // Считаем все разделители тысячными
+                    thousandSeparator = lastSepMatch[0].charAt(0);
+                }
+            }
+        }
+        
+        console.log('Decimal separator:', decimalSeparator, 'Thousand separator:', thousandSeparator);
+        
+        // Обрабатываем строку в зависимости от найденных разделителей
+        if (decimalSeparator && thousandSeparator) {
+            // Есть и десятичный и тысячный разделители
+            // Удаляем все разделители тысяч
+            const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
+            cleanPrice = cleanPrice.replace(thousandRegex, '');
+            // Заменяем десятичный разделитель на точку
+            if (decimalSeparator === ',') {
+                cleanPrice = cleanPrice.replace(',', '.');
+            }
+        } else if (decimalSeparator) {
+            // Есть только десятичный разделитель (без тысячных)
+            if (decimalSeparator === ',') {
+                cleanPrice = cleanPrice.replace(',', '.');
+            }
+        } else if (thousandSeparator) {
+            // Есть только разделители тысяч (без десятичных)
+            const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
+            cleanPrice = cleanPrice.replace(thousandRegex, '');
+        }
+        // Если ни того ни другого не определено - оставляем как есть
+        
+        console.log('Clean price (final):', cleanPrice);
+        
+        price = parseFloat(cleanPrice);
+        
+        console.log('Parsed price:', price, 'Currency:', currency);
     }
     
-    console.log('Final price:', price);
-    
-    if (price <= 0) {
+    if (!price || price <= 0 || isNaN(price)) {
+        console.error('Installment Calculator: Не удалось получить цену товара');
         return;
     }
     
@@ -49,26 +137,36 @@ $(document).ready(function() {
         console.error('Installment Calculator: Ошибка парсинга месяцев', e);
     }
     
-    // Данные товара - для UniShop2
+    // Данные товара
     const productName = $('h1').first().text().trim() || $('title').text().trim();
     const productImage = $('.thumbnail img').first().attr('src') || 
                          $('.product-thumb img').first().attr('src') ||
-                         $('img[itemprop="image"]').first().attr('src');
+                         $('img[itemprop="image"]').first().attr('src') ||
+                         '';
     const productUrl = window.location.href;
     
-    console.log('Product:', productName, productImage);
+    console.log('Product:', productName);
     
     let currentMonths = availableMonths[availableMonths.length - 1] || 12;
     
+    // Функция форматирования числа с разделителями тысяч
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+    
     // Функция расчёта
     function calculate(months) {
-        const monthly = Math.round(price / months);
-        $('.installment-monthly').text(monthly);
+        const monthly = Math.round(price / months * 100) / 100; // Округляем до копеек
+        const monthlyFormatted = formatNumber(monthly.toFixed(2));
+        const priceFormatted = formatNumber(price.toFixed(2));
+        
+        $('.installment-monthly').text(monthlyFormatted + ' ' + currency);
         $('.installment-period').text(months);
-        $('.installment-total').text(price);
-        $('.installment-price').text(price);
+        $('.installment-total').text(priceFormatted + ' ' + currency);
+        $('.installment-price').text(priceFormatted + ' ' + currency);
         currentMonths = months;
         
+        // Обновляем активную кнопку
         $('.installment-period-btn').each(function() {
             const btnMonths = parseInt($(this).attr('data-months'));
             if (btnMonths === months) {
@@ -97,48 +195,74 @@ $(document).ready(function() {
     });
     
     // Открытие модального окна
-    $('.installment-btn').on('click', function() {
+    $('.installment-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        const monthlyAmount = Math.round(price / currentMonths * 100) / 100;
+        
         $('#popup-product-name').text(productName);
         $('#popup-product-image').attr('src', productImage);
-        $('#popup-price').text(price);
-        $('#popup-total').text(price);
+        $('#popup-price').text(formatNumber(price.toFixed(2)) + ' ' + currency);
+        $('#popup-total').text(formatNumber(price.toFixed(2)) + ' ' + currency);
         $('#popup-months').text(currentMonths);
-        $('#popup-monthly').text(Math.round(price / currentMonths));
+        $('#popup-monthly').text(formatNumber(monthlyAmount.toFixed(2)) + ' ' + currency);
+        
+        // Сохраняем валюту в data-атрибут для использования в форме
+        $('#installment-popup').data('currency', currency);
         
         $('#installment-popup').modal('show');
     });
     
-    // Отправка формы
+    // ========================================
+    // Правильные селекторы для формы в popup
+    // ========================================
+    
     $('#installment-form').on('submit', function(e) {
         e.preventDefault();
         
+        // ВАЖНО: ищем поля ВНУТРИ popup
+        const $form = $(this);
+        const nameValue = $form.find('input[name="name"]').val().trim();
+        const phoneValue = $form.find('input[name="phone"]').val().trim();
+        
+        console.log('Form submit - Name:', nameValue, 'Phone:', phoneValue);
+        
+        // Валидация
+        if (!nameValue || nameValue.length < 2) {
+            $('#installment-message')
+                .removeClass('alert-success')
+                .addClass('alert alert-danger')
+                .text('Пожалуйста, укажите ваше имя (минимум 2 символа)')
+                .show();
+            $form.find('input[name="name"]').focus();
+            return;
+        }
+        
+        if (!phoneValue || phoneValue.length < 6) {
+            $('#installment-message')
+                .removeClass('alert-success')
+                .addClass('alert alert-danger')
+                .text('Пожалуйста, укажите номер телефона (минимум 6 цифр)')
+                .show();
+            $form.find('input[name="phone"]').focus();
+            return;
+        }
+        
+        // Получаем валюту из popup
+        const popupCurrency = $('#installment-popup').data('currency') || currency;
+        const monthlyAmount = Math.round(price / currentMonths * 100) / 100;
+        
         const formData = {
-            name: $('input[name="name"]').val().trim(),
-            phone: $('input[name="phone"]').val().trim(),
+            name: nameValue,
+            phone: phoneValue,
             product_name: productName,
-            price: price + ' р.',
+            price: formatNumber(price.toFixed(2)) + ' ' + popupCurrency,
             months: currentMonths,
-            monthly: Math.round(price / currentMonths) + ' р.',
+            monthly: formatNumber(monthlyAmount.toFixed(2)) + ' ' + popupCurrency,
             product_url: productUrl
         };
         
-        if (!formData.name) {
-            $('#installment-message')
-                .removeClass('alert-success')
-                .addClass('alert alert-danger')
-                .text('Пожалуйста, укажите ваше имя')
-                .show();
-            return;
-        }
-        
-        if (!formData.phone) {
-            $('#installment-message')
-                .removeClass('alert-success')
-                .addClass('alert alert-danger')
-                .text('Пожалуйста, укажите номер телефона')
-                .show();
-            return;
-        }
+        console.log('Sending form data:', formData);
         
         $.ajax({
             url: 'index.php?route=extension/module/installment_calculator/send',
@@ -146,17 +270,19 @@ $(document).ready(function() {
             data: formData,
             dataType: 'json',
             beforeSend: function() {
-                $('#installment-form button[type="submit"]')
+                $form.find('button[type="submit"]')
                     .prop('disabled', true)
                     .html('<i class="fa fa-spinner fa-spin"></i> Отправка...');
                 $('#installment-message').hide();
             },
             complete: function() {
-                $('#installment-form button[type="submit"]')
+                $form.find('button[type="submit"]')
                     .prop('disabled', false)
                     .text('Отправить данные');
             },
             success: function(json) {
+                console.log('Server response:', json);
+                
                 if (json.error) {
                     $('#installment-message')
                         .removeClass('alert-success')
@@ -170,8 +296,10 @@ $(document).ready(function() {
                         .text(json.success)
                         .show();
                     
-                    $('#installment-form')[0].reset();
+                    // Очистка формы
+                    $form[0].reset();
                     
+                    // Закрытие через 2 секунды
                     setTimeout(function() {
                         $('#installment-popup').modal('hide');
                         $('#installment-message').hide();
@@ -179,7 +307,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', status, error);
+                console.error('AJAX Error:', status, error, xhr.responseText);
                 $('#installment-message')
                     .removeClass('alert-success')
                     .addClass('alert alert-danger')
@@ -189,7 +317,14 @@ $(document).ready(function() {
         });
     });
     
+    // Закрытие сообщения при начале ввода
     $('#installment-form input').on('focus', function() {
         $('#installment-message').fadeOut();
+    });
+    
+    // Очистка формы при закрытии popup
+    $('#installment-popup').on('hidden.bs.modal', function() {
+        $('#installment-form')[0].reset();
+        $('#installment-message').hide();
     });
 });
