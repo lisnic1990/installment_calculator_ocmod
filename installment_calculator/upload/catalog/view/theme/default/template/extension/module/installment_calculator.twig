@@ -64,19 +64,3 @@
         </div>
     </div>
 </div>
-
-<script>
-// Обновляем валюту после загрузки калькулятора
-$(document).ready(function() {
-    // Берем валюту из текущей страницы
-    var priceText = $('.price').first().text();
-    var currency = 'р.';
-    
-    if (priceText.indexOf('лей') !== -1) currency = 'лей';
-    else if (priceText.indexOf('$') !== -1) currency = '$';
-    else if (priceText.indexOf('€') !== -1) currency = '€';
-    else if (priceText.indexOf('₴') !== -1) currency = '₴';
-    
-    $('.installment-currency').text(currency);
-});
-</script>

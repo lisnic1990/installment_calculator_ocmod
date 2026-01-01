@@ -7,11 +7,11 @@ $(document).ready(function() {
     }
     
     // ========================================
-    // ИСПРАВЛЕНИЕ: Улучшенный парсинг цены с правильным определением десятичного разделителя
+    // ПАРСИНГ ЦЕНЫ И ВАЛЮТЫ
     // ========================================
     
     let price = 0;
-    let currency = 'р.'; // По умолчанию
+    let currency = '';
     
     // Получаем текст цены из разных возможных мест
     let priceText = '';
@@ -42,20 +42,17 @@ $(document).ready(function() {
     console.log('Price text found:', priceText);
     
     if (priceText) {
-        // Определяем валюту из текста
-        if (priceText.indexOf('лей') !== -1 || priceText.indexOf('MDL') !== -1) {
-            currency = 'лей';
-        } else if (priceText.indexOf('р.') !== -1 || priceText.indexOf('руб') !== -1 || priceText.indexOf('RUB') !== -1) {
-            currency = 'р.';
-        } else if (priceText.indexOf('$') !== -1 || priceText.indexOf('USD') !== -1) {
-            currency = '$';
-        } else if (priceText.indexOf('€') !== -1 || priceText.indexOf('EUR') !== -1) {
-            currency = '€';
-        } else if (priceText.indexOf('₴') !== -1 || priceText.indexOf('UAH') !== -1) {
-            currency = '₴';
+        // ===== ИЗВЛЕЧЕНИЕ ВАЛЮТЫ (универсальное решение) =====
+        // Удаляем все цифры, пробелы, точки и запятые - остается только валюта
+        const currencyExtracted = priceText.replace(/[\d\s.,]+/g, '').trim();
+        
+        if (currencyExtracted) {
+            currency = currencyExtracted;
         }
         
-        // УЛУЧШЕННЫЙ парсинг цены
+        console.log('Detected currency:', currency || '(not found)');
+        
+        // ===== ПАРСИНГ ЧИСЛОВОЙ ЧАСТИ ЦЕНЫ =====
         // Удаляем все кроме цифр, точки и запятой
         let cleanPrice = priceText.replace(/[^\d.,]/g, '');
         
@@ -63,7 +60,6 @@ $(document).ready(function() {
         
         // Определяем десятичный разделитель по эвристике:
         // Если последний разделитель (. или ,) идет перед ровно 2 цифрами - это десятичный разделитель
-        // Примеры: 100.00 -> десятичная точка, 1,000.00 -> точка десятичная, запятая - тысячи
         let decimalSeparator = null;
         let thousandSeparator = null;
         
@@ -112,7 +108,6 @@ $(document).ready(function() {
             const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
             cleanPrice = cleanPrice.replace(thousandRegex, '');
         }
-        // Если ни того ни другого не определено - оставляем как есть
         
         console.log('Clean price (final):', cleanPrice);
         
@@ -124,6 +119,12 @@ $(document).ready(function() {
     if (!price || price <= 0 || isNaN(price)) {
         console.error('Installment Calculator: Не удалось получить цену товара');
         return;
+    }
+    
+    // Если валюта не определена, используем значение по умолчанию
+    if (!currency) {
+        currency = 'р.';
+        console.warn('Currency not detected, using default:', currency);
     }
     
     // Получение доступных месяцев
@@ -160,10 +161,11 @@ $(document).ready(function() {
         const monthlyFormatted = formatNumber(monthly.toFixed(2));
         const priceFormatted = formatNumber(price.toFixed(2));
         
-        $('.installment-monthly').text(monthlyFormatted + ' ' + currency);
+        $('.installment-monthly').text(monthlyFormatted);
         $('.installment-period').text(months);
-        $('.installment-total').text(priceFormatted + ' ' + currency);
-        $('.installment-price').text(priceFormatted + ' ' + currency);
+        $('.installment-total').text(priceFormatted);
+        $('.installment-price').text(priceFormatted);
+        $('.installment-currency').text(currency);
         currentMonths = months;
         
         // Обновляем активную кнопку
@@ -202,10 +204,10 @@ $(document).ready(function() {
         
         $('#popup-product-name').text(productName);
         $('#popup-product-image').attr('src', productImage);
-        $('#popup-price').text(formatNumber(price.toFixed(2)) + ' ' + currency);
-        $('#popup-total').text(formatNumber(price.toFixed(2)) + ' ' + currency);
+        $('#popup-price').text(formatNumber(price.toFixed(2)));
+        $('#popup-total').text(formatNumber(price.toFixed(2)));
         $('#popup-months').text(currentMonths);
-        $('#popup-monthly').text(formatNumber(monthlyAmount.toFixed(2)) + ' ' + currency);
+        $('#popup-monthly').text(formatNumber(monthlyAmount.toFixed(2)));
         
         // Сохраняем валюту в data-атрибут для использования в форме
         $('#installment-popup').data('currency', currency);
@@ -213,14 +215,10 @@ $(document).ready(function() {
         $('#installment-popup').modal('show');
     });
     
-    // ========================================
-    // Правильные селекторы для формы в popup
-    // ========================================
-    
+    // Обработка формы в popup
     $('#installment-form').on('submit', function(e) {
         e.preventDefault();
         
-        // ВАЖНО: ищем поля ВНУТРИ popup
         const $form = $(this);
         const nameValue = $form.find('input[name="name"]').val().trim();
         const phoneValue = $form.find('input[name="phone"]').val().trim();
@@ -248,17 +246,15 @@ $(document).ready(function() {
             return;
         }
         
-        // Получаем валюту из popup
-        const popupCurrency = $('#installment-popup').data('currency') || currency;
         const monthlyAmount = Math.round(price / currentMonths * 100) / 100;
         
         const formData = {
             name: nameValue,
             phone: phoneValue,
             product_name: productName,
-            price: formatNumber(price.toFixed(2)) + ' ' + popupCurrency,
+            price: formatNumber(price.toFixed(2)) + ' ' + currency,
             months: currentMonths,
-            monthly: formatNumber(monthlyAmount.toFixed(2)) + ' ' + popupCurrency,
+            monthly: formatNumber(monthlyAmount.toFixed(2)) + ' ' + currency,
             product_url: productUrl
         };
         
