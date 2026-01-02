@@ -50,7 +50,7 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
                 $message .= "Товар:\n";
                 $message .= "  Название: " . $this->request->post['product_name'] . "\n";
                 $message .= "  Цена: " . $this->request->post['price'] . "\n";
-                $message .= "  Ссылка: " . $this->request->post['product_url'] . "\n\n";
+                $message .= "  Ссылка: " . html_entity_decode($this->request->post['product_url'])  . "\n\n";
                 $message .= "Условия рассрочки:\n";
                 $message .= "  Период: " . $this->request->post['months'] . " месяцев\n";
                 $message .= "  Ежемесячный платёж: " . $this->request->post['monthly'] . "\n\n";
