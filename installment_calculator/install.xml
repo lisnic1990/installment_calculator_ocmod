@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <author>Custom</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
@@ -40,9 +40,11 @@
     <!-- ВСТАВКА В ШАБЛОН unishop2_free -->
     <file path="catalog/view/theme/unishop2_free/template/product/product.twig">
         <operation>
-            <search><![CDATA[<div class="product-block]]></search>
+            <search><![CDATA[{% if minimum > 1 %}]]></search>
             <add position="before"><![CDATA[
-{{ installment_calculator }}
+                <div class="product-data__item installment_calculator" style="margin-top:15px; width:100%; clear:both;">
+                    {{ installment_calculator }}
+                </div>
             ]]></add>
         </operation>
     </file>
@@ -62,7 +64,7 @@
         <operation>
             <search><![CDATA[</head>]]></search>
             <add position="before"><![CDATA[
-<script src="catalog/view/javascript/installment_calculator.js?v=1.0"></script>
+<script src="catalog/view/javascript/installment_calculator.js"></script>
             ]]></add>
         </operation>
     </file>
