@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <author>Custom</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
@@ -94,7 +94,7 @@
         <operation>
             <search><![CDATA[</head>]]></search>
             <add position="before"><![CDATA[
-<script src="catalog/view/javascript/installment_calculator.js?v=2.0"></script>
+<script src="catalog/view/javascript/installment_calculator.js"></script>
             ]]></add>
         </operation>
     </file>
