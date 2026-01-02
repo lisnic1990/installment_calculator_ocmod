@@ -6,13 +6,13 @@
                     <svg width="40" height="40" viewBox="0 0 40 40" fill="#5c6bc0">
                         <path d="M20 8c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12z"/>
                     </svg>
-                    <h4 style="margin: 0; font-size: 24px; font-weight: 700;">Оформить рассрочку</h4>
+                    <h4 style="margin: 0; font-size: 24px; font-weight: 700;">{{ heading_popup|default('Оформить рассрочку') }}</h4>
                 </div>
                 <button type="button" class="close" data-dismiss="modal" style="font-size: 30px; opacity: 0.5;">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px 30px;">
                 <div style="display: flex; gap: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <img id="popup-product-image" src="" style="width: 80px; height: 80px; object-fit: contain;">
+                    <img id="popup-product-image" src="" alt="" style="width: 80px; height: 80px; object-fit: contain;">
                     <div style="flex: 1;">
                         <div id="popup-product-name" style="font-weight: 600; margin-bottom: 10px;"></div>
                         <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
@@ -23,39 +23,39 @@
                 
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px;">
                     <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Сумма:</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">{{ text_installment_amount|default('Сумма:') }}</div>
                         <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
                             <span id="popup-total"></span> <span id="popup-currency2"></span>
                         </div>
                     </div>
                     <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Период:</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">{{ text_installment_period_months|default('Период:') }}</div>
                         <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
-                            <span id="popup-months"></span> мес.
+                            <span id="popup-months"></span> <span class="popup-label-months">{{ text_months|default('мес.') }}</span>
                         </div>
                     </div>
                     <div style="background: #e8eaf6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">В месяц:</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">{{ text_monthly_payment|default('В месяц:') }}</div>
                         <div style="font-size: 20px; font-weight: 700; color: #5c6bc0;">
                             <span id="popup-monthly"></span> <span id="popup-currency3"></span>
                         </div>
                     </div>
                 </div>
                 
-                <h5 style="font-size: 18px; font-weight: 700; margin-bottom: 15px;">Оставьте данные</h5>
-                <p style="color: #666; margin-bottom: 20px;">С вами свяжется наш менеджер</p>
+                <h5 style="font-size: 18px; font-weight: 700; margin-bottom: 15px;">{{ text_leave_contacts|default('Оставьте данные') }}</h5>
+                <p style="color: #666; margin-bottom: 20px;">{{ text_manager_contact|default('С вами свяжется наш менеджер') }}</p>
                 
                 <form id="installment-form">
                     <div class="form-group">
-                        <label style="font-size: 14px; color: #5c6bc0;">Имя *</label>
-                        <input type="text" name="name" id="installment-name" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" placeholder="Введите ваше имя" required>
+                        <label style="font-size: 14px; color: #5c6bc0;">{{ entry_name|default('Имя') }} *</label>
+                        <input type="text" name="name" id="installment-name" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" placeholder="{{ placeholder_name|default('Введите ваше имя') }}" required>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 14px; color: #5c6bc0;">Телефон *</label>
-                        <input type="tel" name="phone" id="installment-phone" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" placeholder="+373 XX XXX XXX" required>
+                        <label style="font-size: 14px; color: #5c6bc0;">{{ entry_phone|default('Телефон') }} *</label>
+                        <input type="tel" name="phone" id="installment-phone" class="form-control" style="border-radius: 8px; border: 1px solid #ddd; padding: 12px;" placeholder="{{ placeholder_phone|default('+373 XX XXX XXX') }}" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%; background: #5c6bc0; border: none; padding: 0px; font-size: 16px; border-radius: 8px;">
-                        Отправить данные
+                        {{ button_send|default('Отправить данные') }}
                     </button>
                 </form>
                 <div id="installment-message" style="margin-top: 15px; display: none;"></div>
