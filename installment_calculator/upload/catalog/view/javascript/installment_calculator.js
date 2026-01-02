@@ -140,10 +140,13 @@ $(document).ready(function() {
     
     // Данные товара
     const productName = $('h1').first().text().trim() || $('title').text().trim();
-    const productImage = $('.thumbnail img').first().attr('src') || 
-                         $('.product-thumb img').first().attr('src') ||
-                         $('img[itemprop="image"]').first().attr('src') ||
-                         '';
+
+    // Поиск пути на фото товара
+    const selectors = ['a.thumbnail img', '#content img', '.product-info .image img', '.thumbnails img', 'img[itemprop="image"]'];
+    const productImage = selectors
+    .map(s => document.querySelector(s))
+    .find(el => el?.src)?.src || null;
+
     const productUrl = window.location.href;
     
     console.log('Product:', productName);

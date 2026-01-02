@@ -2,7 +2,7 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.0.9</version>
+    <version>1.1.0</version>
     <author>Custom</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
