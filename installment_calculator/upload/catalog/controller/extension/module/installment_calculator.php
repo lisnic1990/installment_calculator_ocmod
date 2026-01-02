@@ -22,9 +22,11 @@ class ControllerExtensionModuleInstallmentCalculator extends Controller {
         $data['months_json'] = json_encode($months);
         $data['default_month'] = end($months);
         $data['price'] = '0';
+        
+        // Языковой код
         $data['language'] = $this->config->get('config_language');
         
-        // Передаём языковые переменные
+        // Передаём языковые переменные в шаблон
         $data['text_installment_period'] = $this->language->get('text_installment_period');
         $data['text_months'] = $this->language->get('text_months');
         $data['text_per_month'] = $this->language->get('text_per_month');

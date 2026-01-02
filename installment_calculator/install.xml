@@ -10,23 +10,14 @@
         <operation>
             <search><![CDATA[$data['footer'] = $this->load->controller('common/footer');]]></search>
             <add position="before"><![CDATA[
-        // Installment Calculator
+        // Installment Calculator - Fixed Controller Call
         $this->load->model('setting/setting');
         $inst_settings = $this->model_setting_setting->getSetting('module_installment_calculator');
         
         if (!empty($inst_settings['module_installment_calculator_status'])) {
-            $months_string = !empty($inst_settings['module_installment_calculator_months']) ? $inst_settings['module_installment_calculator_months'] : '4,6,10,12';
-            $months = array_map('intval', array_map('trim', explode(',', $months_string)));
-            sort($months);
-            
-            $inst_data = array();
-            $inst_data['months'] = $months;
-            $inst_data['months_json'] = json_encode($months);
-            $inst_data['default_month'] = end($months);
-            $inst_data['price'] = isset($data['price']) ? $data['price'] : '0';
-            
-            $data['installment_calculator'] = $this->load->view('extension/module/installment_calculator', $inst_data);
-            $data['installment_popup'] = $this->load->view('extension/module/installment_popup');
+            // Вызываем контроллер, а не view напрямую
+            $data['installment_calculator'] = $this->load->controller('extension/module/installment_calculator');
+            $data['installment_popup'] = $this->load->controller('extension/module/installment_calculator/popup');
         } else {
             $data['installment_calculator'] = '';
             $data['installment_popup'] = '';

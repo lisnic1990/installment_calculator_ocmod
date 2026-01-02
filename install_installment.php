@@ -2,257 +2,145 @@
 require_once('config.php');
 require_once(DIR_SYSTEM . 'startup.php');
 
+// Registry
 $registry = new Registry();
+
+// Config
+$config = new Config();
+$registry->set('config', $config);
+
+// Database
 $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 $registry->set('db', $db);
 
-echo "<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
-.success { color: green; }
-.error { color: red; }
-.warning { color: orange; }
-table { border-collapse: collapse; margin: 10px 0; }
-table td, table th { border: 1px solid #ddd; padding: 8px; text-align: left; }
-.box { padding: 15px; margin: 10px 0; border-radius: 5px; }
-.box-success { background: #e8f5e9; border-left: 4px solid green; }
-.box-error { background: #ffebee; border-left: 4px solid red; }
-.box-info { background: #e3f2fd; border-left: 4px solid blue; }
-</style>";
+// Language
+$language = new Language('ru-ru');
+$language->load('extension/module/installment_calculator');
+$registry->set('language', $language);
 
-echo "<h1>🔍 Диагностика модуля рассрочки</h1>";
-echo "<p><small>Время проверки: " . date('Y-m-d H:i:s') . "</small></p>";
+echo "<h1>Тест локализации</h1>";
+echo "<hr>";
 
-// 0. Конфигурация
-echo "<h2>0️⃣ Конфигурация системы</h2>";
-echo "<table>";
-echo "<tr><th>Параметр</th><th>Значение</th></tr>";
-echo "<tr><td>DIR_STORAGE</td><td><strong>" . DIR_STORAGE . "</strong></td></tr>";
-echo "<tr><td>DIR_MODIFICATION</td><td><strong>" . DIR_STORAGE . "modification/</strong></td></tr>";
-echo "<tr><td>Тема (config)</td><td><strong>" . (defined('HTTP_CATALOG') ? 'unishop2_free' : 'проверьте в админке') . "</strong></td></tr>";
-echo "</table>";
-
-// 1. Проверка настроек модуля
-echo "<h2>1️⃣ Настройки модуля в БД</h2>";
-$q = $db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE code = 'module_installment_calculator' ORDER BY `key`");
+// 1. Проверка языков в БД
+echo "<h2>1. Установленные языки:</h2>";
+$q = $db->query("SELECT * FROM " . DB_PREFIX . "language ORDER BY sort_order");
 if ($q->num_rows) {
-    echo "<table>";
-    echo "<tr><th>Параметр</th><th>Значение</th></tr>";
+    echo "<table border='1' cellpadding='5'>";
+    echo "<tr><th>ID</th><th>Название</th><th>Код</th><th>Директория</th><th>Статус</th></tr>";
     foreach ($q->rows as $row) {
-        $key = str_replace('module_installment_calculator_', '', $row['key']);
-        echo "<tr><td>" . $key . "</td><td><strong>" . htmlspecialchars($row['value']) . "</strong></td></tr>";
+        $status = $row['status'] ? '<span style="color:green;">✓ Активен</span>' : '<span style="color:red;">✗ Неактивен</span>';
+        echo "<tr>";
+        echo "<td>" . $row['language_id'] . "</td>";
+        echo "<td>" . $row['name'] . "</td>";
+        echo "<td>" . $row['code'] . "</td>";
+        echo "<td>" . $row['directory'] . "</td>";
+        echo "<td>" . $status . "</td>";
+        echo "</tr>";
     }
     echo "</table>";
-    
-    // Проверка статуса
-    $status_q = $db->query("SELECT value FROM " . DB_PREFIX . "setting WHERE `key` = 'module_installment_calculator_status'");
-    if ($status_q->num_rows && $status_q->row['value'] == '1') {
-        echo "<p class='success'>✓ Модуль включен</p>";
-    } else {
-        echo "<p class='error'>✗ Модуль выключен - включите в админке!</p>";
-    }
 } else {
-    echo "<div class='box box-error'>";
-    echo "<p class='error'><strong>❌ Настройки не найдены!</strong></p>";
-    echo "<p>Модуль не установлен. Выполните:</p>";
-    echo "<pre>Админка → Расширения → Модули → Installment Calculator → Установить</pre>";
-    echo "</div>";
+    echo "<p style='color:red;'>Языки не найдены!</p>";
 }
 
 // 2. Проверка файлов
-echo "<h2>2️⃣ Файлы модуля</h2>";
-$files = [
-    'catalog/controller/extension/module/installment_calculator.php',
-    'catalog/language/ru-ru/extension/module/installment_calculator.php',
-    'catalog/view/theme/default/template/extension/module/installment_calculator.twig',
-    'catalog/view/theme/default/template/extension/module/installment_popup.twig',
-    'catalog/view/theme/unishop2_free/template/extension/module/installment_calculator.twig',
-    'catalog/view/theme/unishop2_free/template/extension/module/installment_popup.twig',
-    'catalog/view/javascript/installment_calculator.js',
-    'admin/controller/extension/module/installment_calculator.php',
-    'admin/language/ru-ru/extension/module/installment_calculator.php',
-    'admin/view/template/extension/module/installment_calculator.twig'
+echo "<h2>2. Файлы локализации:</h2>";
+$languages = ['ru-ru', 'ro-ro'];
+$files = [];
+
+foreach ($languages as $lang) {
+    $catalog_file = "catalog/language/$lang/extension/module/installment_calculator.php";
+    $admin_file = "admin/language/$lang/extension/module/installment_calculator.php";
+    
+    echo "<h3>Язык: $lang</h3>";
+    echo "<ul>";
+    if (file_exists($catalog_file)) {
+        echo "<li style='color:green;'>✓ $catalog_file</li>";
+    } else {
+        echo "<li style='color:red;'>✗ $catalog_file <strong>НЕ НАЙДЕН</strong></li>";
+    }
+    
+    if (file_exists($admin_file)) {
+        echo "<li style='color:green;'>✓ $admin_file</li>";
+    } else {
+        echo "<li style='color:red;'>✗ $admin_file <strong>НЕ НАЙДЕН</strong></li>";
+    }
+    echo "</ul>";
+}
+
+// 3. Загрузка языковых переменных
+echo "<h2>3. Загрузка языковых переменных (ru-ru):</h2>";
+
+$language_ru = new Language('ru-ru');
+$language_ru->load('extension/module/installment_calculator');
+
+$test_keys = [
+    'text_installment_period',
+    'text_months',
+    'text_buy_installment',
+    'heading_popup',
+    'text_success',
+    'error_name'
 ];
 
-$missing = [];
-echo "<ul>";
-foreach ($files as $file) {
-    if (file_exists($file)) {
-        $size = filesize($file);
-        echo "<li class='success'>✓ $file <small>(" . number_format($size) . " bytes)</small></li>";
-    } else {
-        echo "<li class='error'>✗ $file <strong>НЕ НАЙДЕН!</strong></li>";
-        $missing[] = $file;
-    }
-}
-echo "</ul>";
-
-// 3. Проверка OCMOD в БД
-echo "<h2>3️⃣ OCMOD в базе данных</h2>";
-$q = $db->query("SELECT * FROM " . DB_PREFIX . "modification WHERE code = 'installment_calculator'");
-if ($q->num_rows) {
-    echo "<table>";
-    echo "<tr><th>Название</th><th>Код</th><th>Статус</th><th>Дата добавления</th></tr>";
-    $row = $q->row;
-    $status = $row['status'] ? '<span class="success">✓ Включен</span>' : '<span class="error">✗ Выключен</span>';
+echo "<table border='1' cellpadding='5'>";
+echo "<tr><th>Ключ</th><th>Значение</th></tr>";
+foreach ($test_keys as $key) {
+    $value = $language_ru->get($key);
+    $color = ($value && $value != $key) ? 'green' : 'red';
     echo "<tr>";
-    echo "<td>" . $row['name'] . "</td>";
-    echo "<td>" . $row['code'] . "</td>";
-    echo "<td>" . $status . "</td>";
-    echo "<td>" . $row['date_added'] . "</td>";
-    echo "</tr></table>";
+    echo "<td>$key</td>";
+    echo "<td style='color:$color;'>" . htmlspecialchars($value) . "</td>";
+    echo "</tr>";
+}
+echo "</table>";
+
+// 4. Загрузка румынских переменных
+echo "<h2>4. Загрузка языковых переменных (ro-ro):</h2>";
+
+if (file_exists('catalog/language/ro-ro/extension/module/installment_calculator.php')) {
+    $language_ro = new Language('ro-ro');
+    $language_ro->load('extension/module/installment_calculator');
     
-    if ($row['status']) {
-        echo "<p class='success'>✓ OCMOD загружен и активен</p>";
-    } else {
-        echo "<p class='error'>✗ OCMOD выключен - включите в Модификаторах</p>";
+    echo "<table border='1' cellpadding='5'>";
+    echo "<tr><th>Ключ</th><th>Значение</th></tr>";
+    foreach ($test_keys as $key) {
+        $value = $language_ro->get($key);
+        $color = ($value && $value != $key) ? 'green' : 'red';
+        echo "<tr>";
+        echo "<td>$key</td>";
+        echo "<td style='color:$color;'>" . htmlspecialchars($value) . "</td>";
+        echo "</tr>";
     }
+    echo "</table>";
 } else {
-    echo "<div class='box box-error'>";
-    echo "<p class='error'><strong>❌ OCMOD не загружен!</strong></p>";
-    echo "<p>Загрузите install.xml:</p>";
-    echo "<pre>Админка → Расширения → Установка расширений → Загрузить install.xml</pre>";
-    echo "</div>";
+    echo "<p style='color:red;'>Файл ro-ro не найден!</p>";
 }
 
-// 4. Проверка применения модификаций
-echo "<h2>4️⃣ Применение модификаций</h2>";
+// 5. Проверка модификации
+echo "<h2>5. Проверка модификации контроллера:</h2>";
 $mod_file = DIR_STORAGE . 'modification/catalog/controller/product/product.php';
-echo "<p><strong>Проверяем:</strong> <code>" . $mod_file . "</code></p>";
 
 if (file_exists($mod_file)) {
-    $size = filesize($mod_file);
-    echo "<p class='success'>✓ Файл существует (" . number_format($size) . " bytes)</p>";
-    
     $content = file_get_contents($mod_file);
-    if (strpos($content, 'Installment Calculator') !== false) {
-        echo "<p class='success'>✓✓ <strong>Модификация ПРИМЕНЕНА!</strong></p>";
+    
+    if (strpos($content, "load->controller('extension/module/installment_calculator')") !== false) {
+        echo "<p style='color:green;'>✓ Вызов контроллера найден (ПРАВИЛЬНО)</p>";
         
         // Показываем фрагмент
-        if (preg_match('/\/\/ Installment Calculator[^\n]*\n[^\n]*\n[^\n]*\n[^\n]*\n[^\n]*/s', $content, $matches)) {
-            echo "<div class='box box-success'>";
-            echo "<strong>Найденный код:</strong>";
-            echo "<pre style='background:#fff;padding:10px;overflow-x:auto;'>" . htmlspecialchars($matches[0]) . "...</pre>";
-            echo "</div>";
+        preg_match("/load->controller\('extension\/module\/installment_calculator.*?\n.*?\n/s", $content, $matches);
+        if (!empty($matches[0])) {
+            echo "<pre style='background:#e8f5e9;padding:10px;'>" . htmlspecialchars($matches[0]) . "</pre>";
         }
+    } elseif (strpos($content, "load->view('extension/module/installment_calculator") !== false) {
+        echo "<p style='color:red;'>✗ Найден прямой вызов view (НЕПРАВИЛЬНО)</p>";
+        echo "<p><strong>Решение:</strong> Загрузите новый install.xml v1.0.9 и обновите модификаторы</p>";
     } else {
-        echo "<p class='error'>✗ Модификация НЕ применена в файле</p>";
-        echo "<div class='box box-error'>";
-        echo "<p><strong>Решение:</strong></p>";
-        echo "<pre>Админка → Расширения → Модификаторы → Обновить (кнопка справа вверху)</pre>";
-        echo "</div>";
+        echo "<p style='color:orange;'>⚠️ Модификация не найдена</p>";
     }
 } else {
-    echo "<p class='error'>✗ Файл модификации не найден</p>";
-    echo "<div class='box box-error'>";
-    echo "<p><strong>Причины:</strong></p>";
-    echo "<ul>";
-    echo "<li>Модификаторы не обновлены</li>";
-    echo "<li>OCMOD не загружен</li>";
-    echo "<li>Путь к storage неверный</li>";
-    echo "</ul>";
-    echo "</div>";
-}
-
-// 5. Проверка модифицированного шаблона
-echo "<h2>5️⃣ Модификация шаблона product.twig</h2>";
-$tpl_mod = DIR_STORAGE . 'modification/catalog/view/theme/unishop2_free/template/product/product.twig';
-echo "<p><strong>Проверяем:</strong> <code>" . $tpl_mod . "</code></p>";
-
-if (file_exists($tpl_mod)) {
-    echo "<p class='success'>✓ Модифицированный шаблон существует</p>";
-    
-    $tpl_content = file_get_contents($tpl_mod);
-    if (strpos($tpl_content, 'installment_calculator') !== false) {
-        echo "<p class='success'>✓✓ Код калькулятора найден в шаблоне!</p>";
-    } else {
-        echo "<p class='error'>✗ Код калькулятора НЕ найден в шаблоне</p>";
-    }
-} else {
-    echo "<p class='warning'>⚠️ Модифицированный шаблон не найден (возможно, ещё не создан)</p>";
-}
-
-// 6. Проверка событий (опционально)
-echo "<h2>6️⃣ События (опционально)</h2>";
-$q = $db->query("SELECT * FROM " . DB_PREFIX . "event WHERE code = 'installment_calculator'");
-if ($q->num_rows) {
-    echo "<table>";
-    echo "<tr><th>Trigger</th><th>Action</th><th>Status</th></tr>";
-    echo "<tr>";
-    echo "<td>" . $q->row['trigger'] . "</td>";
-    echo "<td>" . $q->row['action'] . "</td>";
-    echo "<td>" . ($q->row['status'] ? '<span class="success">✓</span>' : '<span class="error">✗</span>') . "</td>";
-    echo "</tr></table>";
-} else {
-    echo "<p class='warning'>⚠️ События не используются (нормально для OCMOD версии)</p>";
-}
-
-// Итоговый отчёт
-echo "<hr>";
-echo "<h2>📋 ИТОГОВЫЙ ОТЧЁТ</h2>";
-
-$critical_errors = [];
-$warnings = [];
-
-if (!$q->num_rows) {
-    $q = $db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE code = 'module_installment_calculator'");
-    if (!$q->num_rows) {
-        $critical_errors[] = "Модуль не установлен в системе";
-    }
-}
-
-$q = $db->query("SELECT * FROM " . DB_PREFIX . "modification WHERE code = 'installment_calculator'");
-if (!$q->num_rows) {
-    $critical_errors[] = "OCMOD не загружен - загрузите install.xml";
-}
-
-if (!file_exists($mod_file)) {
-    $critical_errors[] = "Модификации не применены - обновите модификаторы";
-} elseif (file_exists($mod_file)) {
-    $content = file_get_contents($mod_file);
-    if (strpos($content, 'Installment Calculator') === false) {
-        $critical_errors[] = "Модификация не применена к product.php - обновите модификаторы";
-    }
-}
-
-if (!empty($missing)) {
-    $critical_errors[] = "Отсутствуют " . count($missing) . " файлов - загрузите их по FTP";
-}
-
-if (empty($critical_errors)) {
-    echo "<div class='box box-success'>";
-    echo "<h3 style='color:green;margin:0;'>✅ ВСЁ НАСТРОЕНО ПРАВИЛЬНО!</h3>";
-    echo "<p>Модуль должен отображаться на странице товара.</p>";
-    echo "<p><strong>Если не видите модуль:</strong></p>";
-    echo "<ol>";
-    echo "<li>Нажмите <strong>Ctrl+F5</strong> для жесткого обновления страницы</li>";
-    echo "<li>Откройте <strong>F12 → Console</strong> и проверьте ошибки JavaScript</li>";
-    echo "<li>Убедитесь, что текущая тема действительно <strong>unishop2_free</strong></li>";
-    echo "<li>Очистите кэш браузера</li>";
-    echo "</ol>";
-    echo "<p><a href='http://test.aeroclima.md/index.php?route=product/product&product_id=40' target='_blank' style='display:inline-block;background:#4CAF50;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>→ Открыть страницу товара</a></p>";
-    echo "</div>";
-} else {
-    echo "<div class='box box-error'>";
-    echo "<h3 style='color:red;margin:0;'>❌ НАЙДЕНЫ КРИТИЧЕСКИЕ ОШИБКИ:</h3>";
-    echo "<ol>";
-    foreach ($critical_errors as $error) {
-        echo "<li><strong>" . $error . "</strong></li>";
-    }
-    echo "</ol>";
-    echo "<p><strong>Порядок исправления:</strong></p>";
-    echo "<ol>";
-    echo "<li>Загрузите недостающие файлы (если есть)</li>";
-    echo "<li>Загрузите install.xml через админку</li>";
-    echo "<li>Обновите модификаторы</li>";
-    echo "<li>Очистите кэш</li>";
-    echo "<li>Перезапустите этот скрипт</li>";
-    echo "</ol>";
-    echo "</div>";
+    echo "<p style='color:red;'>✗ Файл модификации не найден</p>";
 }
 
 echo "<hr>";
-echo "<div class='box box-info'>";
-echo "<p><strong>⚠️ ВАЖНО:</strong> После успешной проверки <strong style='color:red;'>УДАЛИТЕ этот файл (test_installment.php)</strong> с сервера!</p>";
-echo "</div>";
+echo "<p><strong>После проверки УДАЛИТЕ этот файл!</strong></p>";
 ?>
