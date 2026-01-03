@@ -2,8 +2,8 @@
 <modification>
     <name>Installment Calculator</name>
     <code>installment_calculator</code>
-    <version>1.1.0</version>
-    <author>Custom</author>
+    <version>1.1.2</version>
+    <author>A.L.</author>
     
     <!-- ПРЯМАЯ ВСТАВКА В КОНТРОЛЛЕР ПРОДУКТА -->
     <file path="catalog/controller/product/product.php">

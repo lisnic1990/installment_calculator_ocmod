@@ -13,108 +13,133 @@ $(document).ready(function() {
     let price = 0;
     let currency = '';
     
-    // Получаем текст цены из разных возможных мест
-    let priceText = '';
-    let priceElement = null;
-    
-    // Попытка 1: .price-new
-    priceElement = $('.price .price-new').first();
-    if (priceElement.length) {
-        priceText = priceElement.text();
-    }
-    
-    // Попытка 2: любой h2 с ценой
-    if (!priceText) {
-        priceElement = $('ul.list-unstyled li h2').first();
+    // Функция получения и парсинга цены
+    function getPriceFromPage() {
+        let priceText = '';
+        // let priceElement = null;
+
+        var priceContainer = $('.product-page__price.price').first();
+        var newPrice = priceContainer.find('.price-new');
+
+        if (newPrice.length > 0) {
+            // Если price-new существует, возвращаем его текст
+            console.log(newPrice.text());
+            priceText = newPrice.text();
+        } else {
+            // Если price-new не существует, возвращаем весь текст родительского элемента
+            console.log(priceContainer.text());
+            priceText = priceContainer.text();
+        }
+        
+        /*
+        // Приоритет 1: Цена товара на странице (с учетом количества)
+        priceElement = $('.product-page__price.price').first();
         if (priceElement.length) {
             priceText = priceElement.text();
         }
-    }
-    
-    // Попытка 3: любой элемент с классом price
-    if (!priceText) {
-        priceElement = $('.price').first();
-        if (priceElement.length) {
-            priceText = priceElement.text();
-        }
-    }
-    
-    console.log('Price text found:', priceText);
-    
-    if (priceText) {
-        // ===== ИЗВЛЕЧЕНИЕ ВАЛЮТЫ (универсальное решение) =====
-        // Удаляем все цифры, пробелы, точки и запятые - остается только валюта
-        const currencyExtracted = priceText.replace(/[\d\s.,]+/g, '').trim();
         
-        if (currencyExtracted) {
-            currency = currencyExtracted;
+        // Приоритет 2: .price-new
+        if (!priceText) {
+            priceElement = $('.price .price-new').first();
+            if (priceElement.length) {
+                priceText = priceElement.text();
+            }
         }
         
-        console.log('Detected currency:', currency || '(not found)');
+        // Приоритет 3: любой h2 с ценой
+        if (!priceText) {
+            priceElement = $('ul.list-unstyled li h2').first();
+            if (priceElement.length) {
+                priceText = priceElement.text();
+            }
+        }
         
-        // ===== ПАРСИНГ ЧИСЛОВОЙ ЧАСТИ ЦЕНЫ =====
-        // Удаляем все кроме цифр, точки и запятой
-        let cleanPrice = priceText.replace(/[^\d.,]/g, '');
+        // Приоритет 4: любой элемент с классом price
+        if (!priceText) {
+            priceElement = $('.price').first();
+            if (priceElement.length) {
+                priceText = priceElement.text();
+            }
+        }
+        */
         
-        console.log('Clean price (step 1):', cleanPrice);
+        return priceText;
+    }
+    
+    // Функция парсинга цены и валюты
+    function parsePriceAndCurrency(priceText) {
+        let parsedPrice = 0;
+        let parsedCurrency = '';
         
-        // Определяем десятичный разделитель по эвристике:
-        // Если последний разделитель (. или ,) идет перед ровно 2 цифрами - это десятичный разделитель
-        let decimalSeparator = null;
-        let thousandSeparator = null;
+        console.log('Parsing price text:', priceText);
         
-        const lastSepMatch = cleanPrice.match(/[.,](\d+)$/);
-        if (lastSepMatch) {
-            const digitsAfterLastSep = lastSepMatch[1].length;
-            if (digitsAfterLastSep === 2) {
-                // Последний разделитель с ровно 2 цифрами - это десятичный разделитель
-                decimalSeparator = cleanPrice.match(/([.,])\d{2}$/)[1];
-                thousandSeparator = decimalSeparator === '.' ? ',' : '.';
-            } else if (digitsAfterLastSep === 3) {
-                // Последний разделитель с 3 цифрами - скорее всего разделитель тысяч
-                // Ищем предпоследний разделитель
-                const beforeLast = cleanPrice.substring(0, cleanPrice.lastIndexOf(lastSepMatch[0]));
-                const prevSepMatch = beforeLast.match(/[.,](\d+)$/);
-                if (prevSepMatch && prevSepMatch[1].length === 2) {
-                    // Предпоследний с 2 цифрами - это десятичный
-                    decimalSeparator = prevSepMatch[0].charAt(0);
+        if (priceText) {
+            // ===== ИЗВЛЕЧЕНИЕ ВАЛЮТЫ =====
+            const currencyExtracted = priceText.replace(/[\d\s.,]+/g, '').trim();
+            if (currencyExtracted) {
+                parsedCurrency = currencyExtracted;
+            }
+            
+            console.log('Detected currency:', parsedCurrency || '(not found)');
+            
+            // ===== ПАРСИНГ ЧИСЛОВОЙ ЧАСТИ ЦЕНЫ =====
+            let cleanPrice = priceText.replace(/[^\d.,]/g, '');
+            
+            console.log('Clean price (step 1):', cleanPrice);
+            
+            let decimalSeparator = null;
+            let thousandSeparator = null;
+            
+            const lastSepMatch = cleanPrice.match(/[.,](\d+)$/);
+            if (lastSepMatch) {
+                const digitsAfterLastSep = lastSepMatch[1].length;
+                if (digitsAfterLastSep === 2) {
+                    decimalSeparator = cleanPrice.match(/([.,])\d{2}$/)[1];
                     thousandSeparator = decimalSeparator === '.' ? ',' : '.';
-                } else {
-                    // Считаем все разделители тысячными
-                    thousandSeparator = lastSepMatch[0].charAt(0);
+                } else if (digitsAfterLastSep === 3) {
+                    const beforeLast = cleanPrice.substring(0, cleanPrice.lastIndexOf(lastSepMatch[0]));
+                    const prevSepMatch = beforeLast.match(/[.,](\d+)$/);
+                    if (prevSepMatch && prevSepMatch[1].length === 2) {
+                        decimalSeparator = prevSepMatch[0].charAt(0);
+                        thousandSeparator = decimalSeparator === '.' ? ',' : '.';
+                    } else {
+                        thousandSeparator = lastSepMatch[0].charAt(0);
+                    }
                 }
             }
+            
+            console.log('Decimal separator:', decimalSeparator, 'Thousand separator:', thousandSeparator);
+            
+            if (decimalSeparator && thousandSeparator) {
+                const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
+                cleanPrice = cleanPrice.replace(thousandRegex, '');
+                if (decimalSeparator === ',') {
+                    cleanPrice = cleanPrice.replace(',', '.');
+                }
+            } else if (decimalSeparator) {
+                if (decimalSeparator === ',') {
+                    cleanPrice = cleanPrice.replace(',', '.');
+                }
+            } else if (thousandSeparator) {
+                const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
+                cleanPrice = cleanPrice.replace(thousandRegex, '');
+            }
+            
+            console.log('Clean price (final):', cleanPrice);
+            
+            parsedPrice = parseFloat(cleanPrice);
+            
+            console.log('Parsed price:', parsedPrice, 'Currency:', parsedCurrency);
         }
         
-        console.log('Decimal separator:', decimalSeparator, 'Thousand separator:', thousandSeparator);
-        
-        // Обрабатываем строку в зависимости от найденных разделителей
-        if (decimalSeparator && thousandSeparator) {
-            // Есть и десятичный и тысячный разделители
-            // Удаляем все разделители тысяч
-            const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
-            cleanPrice = cleanPrice.replace(thousandRegex, '');
-            // Заменяем десятичный разделитель на точку
-            if (decimalSeparator === ',') {
-                cleanPrice = cleanPrice.replace(',', '.');
-            }
-        } else if (decimalSeparator) {
-            // Есть только десятичный разделитель (без тысячных)
-            if (decimalSeparator === ',') {
-                cleanPrice = cleanPrice.replace(',', '.');
-            }
-        } else if (thousandSeparator) {
-            // Есть только разделители тысяч (без десятичных)
-            const thousandRegex = new RegExp('\\' + thousandSeparator, 'g');
-            cleanPrice = cleanPrice.replace(thousandRegex, '');
-        }
-        
-        console.log('Clean price (final):', cleanPrice);
-        
-        price = parseFloat(cleanPrice);
-        
-        console.log('Parsed price:', price, 'Currency:', currency);
+        return { price: parsedPrice, currency: parsedCurrency };
     }
+    
+    // Получаем начальную цену
+    const priceText = getPriceFromPage();
+    const parsed = parsePriceAndCurrency(priceText);
+    price = parsed.price;
+    currency = parsed.currency;
     
     if (!price || price <= 0 || isNaN(price)) {
         console.error('Installment Calculator: Не удалось получить цену товара');
@@ -160,9 +185,9 @@ $(document).ready(function() {
     
     // Функция расчёта
     function calculate(months) {
-        const monthly = Math.round(price / months * 100) / 100; // Округляем до копеек
-        const monthlyFormatted = formatNumber(monthly.toFixed(2));
-        const priceFormatted = formatNumber(price.toFixed(2));
+        const monthly = Math.floor(price / months); // обрезаем дробную часть
+        const monthlyFormatted = formatNumber(monthly.toFixed(0));
+        const priceFormatted = formatNumber(Math.floor(price).toFixed(0));
         
         $('.installment-monthly').text(monthlyFormatted);
         $('.installment-period').text(months);
@@ -203,14 +228,14 @@ $(document).ready(function() {
     $('.installment-btn').on('click', function(e) {
         e.preventDefault();
         
-        const monthlyAmount = Math.round(price / currentMonths * 100) / 100;
+        const monthlyAmount = Math.floor(price / currentMonths);
         
         $('#popup-product-name').text(productName);
         $('#popup-product-image').attr('src', productImage);
-        $('#popup-price').text(formatNumber(price.toFixed(2)));
-        $('#popup-total').text(formatNumber(price.toFixed(2)));
+        $('#popup-price').text(formatNumber(Math.floor(price).toFixed(0)));
+        $('#popup-total').text(formatNumber(Math.floor(price).toFixed(0)));
         $('#popup-months').text(currentMonths);
-        $('#popup-monthly').text(formatNumber(monthlyAmount.toFixed(2)));
+        $('#popup-monthly').text(formatNumber(monthlyAmount.toFixed(0)));
         
         // Сохраняем валюту в data-атрибут для использования в форме
         $('#installment-popup').data('currency', currency);
@@ -249,15 +274,15 @@ $(document).ready(function() {
             return;
         }
         
-        const monthlyAmount = Math.round(price / currentMonths * 100) / 100;
+        const monthlyAmount = Math.floor(price / currentMonths);
         
         const formData = {
             name: nameValue,
             phone: phoneValue,
             product_name: productName,
-            price: formatNumber(price.toFixed(2)) + ' ' + currency,
+            price: formatNumber(Math.floor(price).toFixed(0)) + ' ' + currency,
             months: currentMonths,
-            monthly: formatNumber(monthlyAmount.toFixed(2)) + ' ' + currency,
+            monthly: formatNumber(monthlyAmount.toFixed(0)) + ' ' + currency,
             product_url: productUrl
         };
         
@@ -301,7 +326,6 @@ $(document).ready(function() {
                     // Закрытие через 2 секунды
                     setTimeout(function() {
                         $('#installment-popup').modal('hide');
-                        $('#installment-message').hide();
                     }, 2000);
                 }
             },
@@ -316,14 +340,56 @@ $(document).ready(function() {
         });
     });
     
-    // Закрытие сообщения при начале ввода
-    $('#installment-form input').on('focus', function() {
-        $('#installment-message').fadeOut();
-    });
-    
     // Очистка формы при закрытии popup
     $('#installment-popup').on('hidden.bs.modal', function() {
         $('#installment-form')[0].reset();
         $('#installment-message').hide();
     });
+    
+    // ========================================
+    // ОТСЛЕЖИВАНИЕ ИЗМЕНЕНИЯ КОЛИЧЕСТВА И ЦЕНЫ
+    // ========================================
+    
+    // MutationObserver для отслеживания изменений цены
+    const priceObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                console.log('Price changed detected by MutationObserver');
+                updatePriceFromPage();
+            }
+        });
+    });
+    
+    // Наблюдаем за изменениями в элементе цены
+    const priceElement = document.querySelector('.product-page__price.price');
+    if (priceElement) {
+        priceObserver.observe(priceElement, {
+            childList: true,
+            characterData: true,
+            subtree: true
+        });
+        console.log('MutationObserver установлен на .product-page__price.price');
+    } else {
+        console.warn('Элемент .product-page__price.price не найден для наблюдения');
+    }
+    
+    // Функция обновления цены из DOM
+    function updatePriceFromPage() {
+        const newPriceText = getPriceFromPage();
+        const parsed = parsePriceAndCurrency(newPriceText);
+        
+        if (parsed.price && parsed.price > 0 && !isNaN(parsed.price)) {
+            const oldPrice = price;
+            price = parsed.price;
+            
+            if (parsed.currency) {
+                currency = parsed.currency;
+            }
+            
+            console.log('Price updated:', oldPrice, '→', price, currency);
+            
+            // Пересчитываем и обновляем калькулятор
+            calculate(currentMonths);
+        }
+    }
 });
