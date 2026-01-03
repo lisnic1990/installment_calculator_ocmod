@@ -16,7 +16,6 @@ $(document).ready(function() {
     // Функция получения и парсинга цены
     function getPriceFromPage() {
         let priceText = '';
-        // let priceElement = null;
 
         var priceContainer = $('.product-page__price.price').first();
         var newPrice = priceContainer.find('.price-new');
@@ -30,38 +29,6 @@ $(document).ready(function() {
             console.log(priceContainer.text());
             priceText = priceContainer.text();
         }
-        
-        /*
-        // Приоритет 1: Цена товара на странице (с учетом количества)
-        priceElement = $('.product-page__price.price').first();
-        if (priceElement.length) {
-            priceText = priceElement.text();
-        }
-        
-        // Приоритет 2: .price-new
-        if (!priceText) {
-            priceElement = $('.price .price-new').first();
-            if (priceElement.length) {
-                priceText = priceElement.text();
-            }
-        }
-        
-        // Приоритет 3: любой h2 с ценой
-        if (!priceText) {
-            priceElement = $('ul.list-unstyled li h2').first();
-            if (priceElement.length) {
-                priceText = priceElement.text();
-            }
-        }
-        
-        // Приоритет 4: любой элемент с классом price
-        if (!priceText) {
-            priceElement = $('.price').first();
-            if (priceElement.length) {
-                priceText = priceElement.text();
-            }
-        }
-        */
         
         return priceText;
     }
@@ -350,14 +317,42 @@ $(document).ready(function() {
     // ОТСЛЕЖИВАНИЕ ИЗМЕНЕНИЯ КОЛИЧЕСТВА И ЦЕНЫ
     // ========================================
     
+    // Debounce переменные
+    let priceUpdateTimeout;
+    let lastParsedPrice = null;
+    
+    // Debounced функция обновления цены
+    function debouncedUpdatePrice() {
+        clearTimeout(priceUpdateTimeout);
+        priceUpdateTimeout = setTimeout(function() {
+            const newPriceText = getPriceFromPage();
+            const parsed = parsePriceAndCurrency(newPriceText);
+            
+            // Проверяем изменение цены
+            if (parsed.price && parsed.price > 0 && !isNaN(parsed.price)) {
+                if (lastParsedPrice === parsed.price) {
+                    console.log('Price unchanged:', parsed.price);
+                    return;
+                }
+                
+                lastParsedPrice = parsed.price;
+                const oldPrice = price;
+                price = parsed.price;
+                
+                if (parsed.currency) {
+                    currency = parsed.currency;
+                }
+                
+                console.log('Price updated:', oldPrice, '→', price, currency);
+                calculate(currentMonths);
+            }
+        }, 200);
+    }
+    
     // MutationObserver для отслеживания изменений цены
     const priceObserver = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                console.log('Price changed detected by MutationObserver');
-                updatePriceFromPage();
-            }
-        });
+        console.log('Price change detected - debouncing...');
+        debouncedUpdatePrice();
     });
     
     // Наблюдаем за изменениями в элементе цены
@@ -371,25 +366,5 @@ $(document).ready(function() {
         console.log('MutationObserver установлен на .product-page__price.price');
     } else {
         console.warn('Элемент .product-page__price.price не найден для наблюдения');
-    }
-    
-    // Функция обновления цены из DOM
-    function updatePriceFromPage() {
-        const newPriceText = getPriceFromPage();
-        const parsed = parsePriceAndCurrency(newPriceText);
-        
-        if (parsed.price && parsed.price > 0 && !isNaN(parsed.price)) {
-            const oldPrice = price;
-            price = parsed.price;
-            
-            if (parsed.currency) {
-                currency = parsed.currency;
-            }
-            
-            console.log('Price updated:', oldPrice, '→', price, currency);
-            
-            // Пересчитываем и обновляем калькулятор
-            calculate(currentMonths);
-        }
     }
 });
